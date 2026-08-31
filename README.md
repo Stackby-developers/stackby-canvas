@@ -103,7 +103,7 @@ These are never violated:
 - [x] **`packages/schema-types`** — Zod schemas + inferred TS types for all service contracts
 - [ ] **`packages/sdk`** — `@stackby/studio-sdk` React hooks (`useRows`, `useCreateRow`, `useUpdateRow`, `useDeleteRow`)
 - [ ] **`packages/ui`** — Shared Radix UI component library
-- [ ] **`packages/prompts`** — Versioned agent prompts + eval harness (200+ golden cases)
+- [x] **`packages/prompts`** — B.0–B.13 agent prompt library: 14 prompts, 14 zod schemas, 13 message builders, 208 tests · `PROMPT_VERSION = "1.4.0"` (eval harness pending)
 
 ### Infrastructure
 
@@ -113,6 +113,20 @@ These are never violated:
 
 ### Reference docs
 
+- [x] **`docs/agent-prompts/B0-shared-preamble.md`** — Shared preamble prepended to every agent prompt (invariants, context slots, platform facts)
+- [x] **`docs/agent-prompts/B1-intent-analyst.md`** — Stage 1: free-form request → structured intent object (goal, artifact type, capabilities, ambiguities)
+- [x] **`docs/agent-prompts/B2-schema-analyst.md`** — Stage 2: intent + schema graph + sampled rows → table roles, semantic profile, candidate bindings, data-quality warnings
+- [x] **`docs/agent-prompts/B3-clarifier.md`** — Stage 3: earn at most 3 questions (structural-only gate) or skip to assumptions; exactly one recommended option per question
+- [x] **`docs/agent-prompts/B4-planner.md`** — Stage 4: pages → sections → bindings → visual direction; binding_ref cross-reference enforced at parse time
+- [x] **`docs/agent-prompts/B5-designer.md`** — Stage 5: visual_direction → full token set (light + dark), layout grammar, WCAG contrast report
+- [x] **`docs/agent-prompts/B6-code-generator.md`** — Stage 6: write/patch/delete file ops; path-traversal guard, write+delete conflict check, stackby.config.json protected
+- [x] **`docs/agent-prompts/B7-visual-verifier.md`** — Stage 7: multimodal; screenshots → pass/fix/fail verdict; pass+blocker enforced at parse time; typed VerifierMessagePart for orchestrator
+- [x] **`docs/agent-prompts/B8-fixer.md`** — Stage 8: targeted repair ops + resolved/unresolved report; id overlap guard; inherits all CodeGen path-safety rules
+- [x] **`docs/agent-prompts/B9-summariser.md`** — Stage 9: run trace → headline (≤8 words enforced), steps, verdict line, what changed, ≤2 suggested next prompts
+- [x] **`docs/agent-prompts/B10-visual-edit.md`** — Out-of-pipeline: direct-manipulation change → minimal source patch; 6% token-snap rule; token_used/token_proposed mutual exclusion enforced
+- [x] **`docs/agent-prompts/B11-annotation-edit.md`** — Out-of-pipeline: pin-comment annotations → per-annotation applied/needs_input/conflicts_with_plan; duplicate id guard; validateAnnotationCoverage helper
+- [x] **`docs/agent-prompts/B12-stack-generator.md`** — Out-of-pipeline: natural language → full Stackby stack; forward-reference guard, column ordering, duplicate key/row checks, hex color validation
+- [x] **`docs/agent-prompts/B13-template-remap.md`** — Out-of-pipeline: template schema → field mappings with confidence/basis; create_column vs ask_user; ≤3 questions; proposed_column mutual exclusion
 - [x] **`docs/backend-prompts/C0-shared-context.md`** — Shared context prepended to every backend prompt
 - [x] **`docs/airtable-hooks-reference.md`** — Airtable hooks library reference
 - [x] **`lib/stackby-hooks.tsx`** — Stackby hooks library (generated into every artifact workspace)

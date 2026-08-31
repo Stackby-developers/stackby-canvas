@@ -17,7 +17,65 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `apps/studio-web` — Builder UI (Home, Builder Shell, Plan Review, Preview Host, Visual Edit, Publish, Admin)
 - `packages/sdk` — `@stackby/studio-sdk` full React hooks implementation
 - `packages/ui` — Shared Radix UI component library
-- `packages/prompts` — Versioned agent prompts + 200+ golden eval cases
+- Eval harness — 200+ golden cases for `packages/prompts`
+
+---
+
+## [0.4.0] — 2026-09-01
+
+### Added — B.0–B.13 Agent Prompt Library (`packages/prompts` + `packages/schema-types`)
+
+Full implementation of the Stackby Studio agent prompt library: 14 prompt definitions
+(B.0–B.13), 14 typed zod output schemas, 13 `build*Messages` functions for composing
+LLM calls, and 208 test cases across two packages. `PROMPT_VERSION = "1.4.0"`.
+
+**Prompt docs (`docs/agent-prompts/`)**
+
+| ID | Stage | Role |
+|----|-------|------|
+| B.0 | Shared preamble | Invariants, context slots, Stackby platform facts — prepended to every agent |
+| B.1 | Intent Analyst | Free-form request → structured intent (goal, artifact type, capabilities, ambiguities) |
+| B.2 | Schema Analyst | Intent + schema graph + sampled rows → table roles, semantic profile, candidate bindings, data-quality warnings |
+| B.3 | Clarifier | Earn at most 3 structural questions (three-part gate); exactly one recommended option per question |
+| B.4 | Planner | Pages → sections → bindings → visual direction; binding_ref cross-reference enforced at parse time |
+| B.5 | Designer | visual_direction → full token set (light + dark), layout grammar, 8 chart colours, WCAG contrast report |
+| B.6 | Code Generator | write/patch/delete file ops; path-traversal guard, write+delete conflict, `stackby.config.json` protected |
+| B.7 | Visual Verifier | Multimodal; screenshots → pass/fix/fail verdict; pass+blocker enforced at parse time; typed `VerifierMessagePart` |
+| B.8 | Fixer | Targeted repair ops + resolved/unresolved report; id overlap guard; inherits all CodeGen path-safety rules |
+| B.9 | Summariser | Run trace → headline (≤8 words), steps, verdict line, what changed, ≤2 suggested next prompts |
+| B.10 | Visual Edit | Direct-manipulation change → minimal source patch; 6% token-snap; `token_used`/`token_proposed` mutual exclusion |
+| B.11 | Annotation Edit | Pin-comment annotations → per-annotation applied/needs_input/conflicts_with_plan; `validateAnnotationCoverage` helper |
+| B.12 | Stack Generator | Natural language → full Stackby stack; forward-reference guard, column ordering, duplicate key/row checks |
+| B.13 | Template Remap | Template schema → field mappings with confidence/basis; create_column vs ask_user; ≤3 questions |
+
+**New zod schemas (`packages/schema-types/src/schemas/`)**
+
+- `intent.ts` — `IntentSchema`, `CapabilitySchema`, `IntentArtifactTypeSchema`, `AmbiguitySchema`
+- `schema-analysis.ts` — `SchemaAnalysisSchema`, `CandidateBindingSchema` (5,000-row cap enforced), `DataQualityWarningSchema`
+- `clarifier.ts` — `ClarifierOutputSchema` with `superRefine` enforcing exactly-one-recommended per question
+- `planner-output.ts` — `PlannerOutputSchema` with binding_ref cross-reference and design_system coherence checks
+- `designer-output.ts` — `DesignerOutputSchema`, `TokenSetSchema` (chart array length=8 enforced), radius literal constraints
+- `codegen-output.ts` — `CodeGenOutputSchema` with path-traversal guard, write+delete conflict, config file protection
+- `visual-verifier.ts` — `VisualVerifierOutputSchema` (pass+blocker rejected), `VerifierMessagePartSchema` (protocol-neutral image parts)
+- `fixer-output.ts` — `FixerOutputSchema` with resolved/unresolved overlap guard; accepts empty operations
+- `summariser-output.ts` — `SummariserOutputSchema` with 8-word headline `superRefine`, `artifact_uri` URL validation
+- `visual-edit.ts` — `VisualEditInputSchema`, `VisualEditOutputSchema` (`token_used`/`token_proposed` mutual exclusion)
+- `annotation-edit.ts` — `AnnotationEditOutputSchema` (duplicate id guard), `validateAnnotationCoverage` helper
+- `stack-generator.ts` — `StackGeneratorOutputSchema` (forward-reference guard, column ordering, duplicate key/row checks, hex color)
+- `template-remap.ts` — `TemplateRemapOutputSchema` (`create_column`/`asked_user` mutual exclusion, ≤3 questions, duplicate id guard)
+
+**`packages/prompts` builders**
+
+Each builder composes `B0_PREAMBLE + B{n}_BODY` as the system prompt and XML-escapes
+all user-controlled context slots into a typed user message:
+
+`buildIntentMessages` · `buildSchemaAnalystMessages` · `buildClarifierMessages` ·
+`buildPlannerMessages` · `buildDesignerMessages` · `buildCodeGeneratorMessages` ·
+`buildVisualVerifierMessages` (returns `{system, userParts: VerifierMessagePart[]}`) ·
+`buildFixerMessages` · `buildSummariserMessages` · `buildVisualEditMessages` ·
+`buildAnnotationEditMessages` · `buildStackGeneratorMessages` · `buildTemplateRemapMessages`
+
+**Test counts:** 44 schema-types · 208 prompts (all passing)
 
 ---
 
