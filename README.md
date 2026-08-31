@@ -81,10 +81,48 @@ These are never violated:
 2. **Zero permission leaks** — no user sees data their Stackby role does not allow
 3. **Code ownership** — the generated source is always exportable by the user
 
+## Build status
+
+### Backend services
+
+- [x] **`services/gateway`** — Data Gateway (C.3) — auth, permission isolation, coalescing cache, token bucket, stale-while-revalidate, writes, aggregation · 45 tests
+- [x] **`services/schema`** — Schema Service (C.2) — introspection, semantic profiling, row sampling, type generation, drift detection · 47 tests
+- [ ] **`services/orchestrator`** — Temporal agent pipeline (C.5) — intent → plan → codegen → verify → fix
+- [ ] **`services/build`** — Sandboxed build + screenshot service (C.7) — Firecracker/gVisor, 90s timeout
+- [ ] **`services/publish`** — Deployments, routing, custom domains (C.8)
+- [ ] **`services/design`** — Design system extraction (C.9)
+- [ ] **`services/git`** — GitHub/GitLab export + sync
+
+### API & frontend
+
+- [ ] **`apps/api`** — BFF: project, run, artifact, credits, admin CRUD routes
+- [ ] **`apps/studio-web`** — Builder UI: Home, Projects, Builder Shell, Plan Review, Preview Host, Visual Edit, Publish, Design Systems, Templates, Admin Console
+
+### Packages
+
+- [x] **`packages/schema-types`** — Zod schemas + inferred TS types for all service contracts
+- [ ] **`packages/sdk`** — `@stackby/studio-sdk` React hooks (`useRows`, `useCreateRow`, `useUpdateRow`, `useDeleteRow`)
+- [ ] **`packages/ui`** — Shared Radix UI component library
+- [ ] **`packages/prompts`** — Versioned agent prompts + eval harness (200+ golden cases)
+
+### Infrastructure
+
+- [x] **`infra/db`** — Drizzle ORM schema, `0001_initial.sql` migration, RLS policies on all 7 workspace-scoped tables
+- [x] **`docker-compose.dev.yml`** — Postgres 16, Redis 7, MinIO, ClickHouse, Temporal + UI
+- [x] **`.github/workflows/ci.yml`** — `install → typecheck → lint → test → build` with turbo remote cache
+
+### Reference docs
+
+- [x] **`docs/backend-prompts/C0-shared-context.md`** — Shared context prepended to every backend prompt
+- [x] **`docs/airtable-hooks-reference.md`** — Airtable hooks library reference
+- [x] **`lib/stackby-hooks.tsx`** — Stackby hooks library (generated into every artifact workspace)
+- [x] **`PRD.md`** — Full product requirements document
+
 ## Documentation
 
-Full product specification: [PRD.md](./PRD.md)
+Full product specification: [PRD.md](./PRD.md)  
+Changelog: [CHANGELOG.md](./CHANGELOG.md)
 
 ## Contributing
 
-See the PRD for feature requirements, architecture decisions, and rollout plan before picking up work.
+See the PRD for feature requirements, architecture decisions, and rollout plan before picking up work. Backend prompts for each service live in `docs/backend-prompts/`.
