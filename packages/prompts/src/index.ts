@@ -1,4 +1,14 @@
 // Versioned agent prompts — loaded by services/orchestrator at runtime
+
+// Assembly infrastructure (from prompt-assembly work)
+export { buildPrompt, assemblePrompt } from './assembly/builder.js';
+export type { SegmentValues } from './assembly/builder.js';
+export { PROMPT_SEGMENT_ORDER } from './assembly/order.js';
+export type { PromptSegment } from './assembly/order.js';
+export { SHARED_PREAMBLE } from './shared/preamble.js';
+export { SDK_DOCS } from './shared/sdk-docs.js';
+
+// Typed output schemas (B.1–B.13)
 export { IntentSchema, CapabilitySchema, AmbiguitySchema } from '@stackby/schema-types';
 export type { Intent, IntentArtifactType, Capability, Ambiguity } from '@stackby/schema-types';
 export { SchemaAnalysisSchema } from '@stackby/schema-types';
@@ -68,21 +78,17 @@ export type {
   MappingRole, MappingBasis, ProposedColumn,
 } from '@stackby/schema-types';
 
-export const PROMPT_VERSION = '1.4.0';
+export const PROMPT_VERSION = '1.5.0';
+export function getPromptVersion(): string { return PROMPT_VERSION; }
 
-export type PromptName =
-  | 'intent-analyzer'
-  | 'schema-analyzer'
-  | 'clarifier'
-  | 'planner'
-  | 'code-generator'
-  | 'visual-verifier'
-  | 'fixer'
-  | 'stack-generator';
-
-export function getPromptVersion(): string {
-  return PROMPT_VERSION;
-}
+import { INTENT_ANALYZER } from './agents/intent-analyzer.js';
+import { SCHEMA_ANALYZER } from './agents/schema-analyzer.js';
+import { CLARIFIER } from './agents/clarifier.js';
+import { PLANNER } from './agents/planner.js';
+import { CODE_GENERATOR } from './agents/code-generator.js';
+import { VISUAL_VERIFIER } from './agents/visual-verifier.js';
+import { FIXER } from './agents/fixer.js';
+import { SUMMARISER } from './agents/summariser.js';
 
 // ---------------------------------------------------------------------------
 // B.0 — Shared preamble (prepended to every agent system prompt)
@@ -1001,3 +1007,16 @@ function escapeXml(value: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 }
+
+export const AGENTS = {
+  intentAnalyzer: INTENT_ANALYZER,
+  schemaAnalyzer: SCHEMA_ANALYZER,
+  clarifier: CLARIFIER,
+  planner: PLANNER,
+  codeGenerator: CODE_GENERATOR,
+  visualVerifier: VISUAL_VERIFIER,
+  fixer: FIXER,
+  summariser: SUMMARISER,
+} as const;
+
+export type AgentName = keyof typeof AGENTS;

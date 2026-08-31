@@ -1,0 +1,35 @@
+{
+  "name": "eslint-plugin-stackby-studio",
+  "version": "0.1.0",
+  "description": "ESLint rules for Stackby Studio generated artifacts",
+  "license": "MIT",
+  "private": false,
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@typescript-eslint/utils": "^7.0.0"
+  },
+  "devDependencies": {
+    "typescript": "*",
+    "vitest": "^1.5.0",
+    "@typescript-eslint/rule-tester": "^7.0.0",
+    "eslint": "^8.57.0"
+  },
+  "peerDependencies": {
+    "eslint": "^8.0.0"
+  }
+}

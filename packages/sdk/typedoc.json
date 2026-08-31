@@ -1,0 +1,8 @@
+{
+  "entryPoints": ["src/index.ts", "src/test-utils/create-test-client.tsx"],
+  "out": "docs",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true
+}

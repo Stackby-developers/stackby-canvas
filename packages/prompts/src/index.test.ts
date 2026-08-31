@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   getPromptVersion,
+  AGENTS,
   buildIntentMessages,
   buildSchemaAnalystMessages,
   buildClarifierMessages,
@@ -35,7 +36,7 @@ import {
 
 describe('getPromptVersion', () => {
   it('returns current version', () => {
-    expect(getPromptVersion()).toBe('1.4.0');
+    expect(getPromptVersion()).toBe('1.5.0');
   });
 });
 
@@ -2092,4 +2093,11 @@ describe('TemplateRemapOutputSchema', () => {
       }),
     ).toThrow();
   });
+});
+
+it('AGENTS exports all required agents', () => {
+  const required = ['intentAnalyzer', 'schemaAnalyzer', 'clarifier', 'planner', 'codeGenerator', 'visualVerifier', 'fixer', 'summariser'];
+  for (const name of required) {
+    expect(name in AGENTS).toBe(true);
+  }
 });

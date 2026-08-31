@@ -1,31 +1,58 @@
 {
   "name": "@stackby/studio-sdk",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "React hooks for Stackby Studio generated artifacts",
+  "license": "MIT",
   "private": false,
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
+    },
+    "./test-utils": {
+      "import": "./dist/test-utils.js",
+      "require": "./dist/test-utils.cjs",
+      "types": "./dist/test-utils.d.ts"
     }
   },
+  "sideEffects": false,
+  "files": ["dist", "README.md"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "lint": "eslint src --ext .ts",
+    "docs": "typedoc",
+    "lint": "eslint src --ext .ts,.tsx",
+    "prepublishOnly": "pnpm build",
     "clean": "rm -rf dist"
   },
-  "devDependencies": {
-    "typescript": "*",
-    "vitest": "^1.5.0"
-  },
   "peerDependencies": {
-    "react": "^18.0.0"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "@tanstack/react-query": "^5.0.0"
   },
   "dependencies": {
-    "@stackby/schema-types": "workspace:*"
+    "@stackby/schema-types": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@stackby/schema-types": "workspace:*",
+    "@tanstack/react-query": "^5.36.0",
+    "@testing-library/react": "^15.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "happy-dom": "^14.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "tsup": "^8.1.0",
+    "typedoc": "^0.25.0",
+    "typedoc-plugin-markdown": "^4.0.0",
+    "typescript": "*",
+    "vitest": "^1.5.0"
   }
 }

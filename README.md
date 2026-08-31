@@ -87,7 +87,7 @@ These are never violated:
 
 - [x] **`services/gateway`** — Data Gateway (C.3) — auth, permission isolation, coalescing cache, token bucket, stale-while-revalidate, writes, aggregation · 45 tests
 - [x] **`services/schema`** — Schema Service (C.2) — introspection, semantic profiling, row sampling, type generation, drift detection · 47 tests
-- [ ] **`services/orchestrator`** — Temporal agent pipeline (C.5) — intent → plan → codegen → verify → fix
+- [x] **`services/orchestrator`** — Temporal agent pipeline (C.5) — GenerationWorkflow (12 activities, signals, 3-cycle self-heal), 4 variant workflows, Redis Streams SSE relay · 22 tests
 - [ ] **`services/build`** — Sandboxed build + screenshot service (C.7) — Firecracker/gVisor, 90s timeout
 - [ ] **`services/publish`** — Deployments, routing, custom domains (C.8)
 - [ ] **`services/design`** — Design system extraction (C.9)
@@ -101,9 +101,9 @@ These are never violated:
 ### Packages
 
 - [x] **`packages/schema-types`** — Zod schemas + inferred TS types for all service contracts
-- [ ] **`packages/sdk`** — `@stackby/studio-sdk` React hooks (`useRows`, `useCreateRow`, `useUpdateRow`, `useDeleteRow`)
+- [x] **`packages/sdk`** — `@stackby/studio-sdk` 0.1.0 — 12 hooks, Filter DSL, standalone client, `createTestClient()`, DataInspector, `eslint-plugin-stackby-studio` · 70 tests · <28KB gzipped
 - [ ] **`packages/ui`** — Shared Radix UI component library
-- [x] **`packages/prompts`** — B.0–B.13 agent prompt library: 14 prompts, 14 zod schemas, 13 message builders, 208 tests · `PROMPT_VERSION = "1.4.0"` (eval harness pending)
+- [x] **`packages/prompts`** — B.0–B.13 agent prompt library (14 prompts, 13 builders, 208 tests) + cache-optimised assembly (`buildPrompt()`, `AGENTS`, 8 instructions) · `PROMPT_VERSION = "1.5.0"` · eval harness pending
 
 ### Infrastructure
 

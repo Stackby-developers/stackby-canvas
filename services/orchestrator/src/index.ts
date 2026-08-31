@@ -1,25 +1,37 @@
 import Fastify from 'fastify';
+import { Redis } from 'ioredis';
+import { loadConfig } from './config.js';
+import { setupActivityDeps, createWorker } from './worker.js';
+import { createTemporalClient } from './client.js';
+import { registerSseRoute } from './routes/sse.js';
+import { registerSignalRoute } from './routes/signal.js';
 
-const SERVICE = 'orchestrator-service';
-const PORT = parseInt(process.env['PORT'] ?? '3003', 10);
+const config = loadConfig();
 
-// Temporal worker will be wired up in a follow-up; stub for now
-export const TEMPORAL_TASK_QUEUE = 'studio-builds';
+const app = Fastify({ logger: { level: config.NODE_ENV === 'test' ? 'silent' : 'info' } });
+const redis = new Redis(config.REDIS_URL, { lazyConnect: true });
 
-const app = Fastify({ logger: true });
+app.get('/health', () => ({ status: 'ok', service: 'orchestrator-service' }));
+app.get('/ready', async () => { await redis.ping(); return { status: 'ready', service: 'orchestrator-service' }; });
 
-app.get('/health', () => ({ status: 'ok', service: SERVICE }));
-app.get('/ready', () => ({ status: 'ready', service: SERVICE }));
+registerSseRoute(app, redis);
+
+export const TEMPORAL_TASK_QUEUE = config.TEMPORAL_TASK_QUEUE;
 
 const start = async () => {
-  try {
-    await app.listen({ port: PORT, host: '0.0.0.0' });
-  } catch (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+  await redis.connect();
+  setupActivityDeps(config);
+
+  const temporalClient = await createTemporalClient(config);
+  registerSignalRoute(app, temporalClient);
+
+  const worker = await createWorker(config);
+  void worker.run();
+
+  await app.listen({ port: config.PORT, host: '0.0.0.0' });
 };
 
-void start();
+if (config.NODE_ENV !== 'test') void start();
 
+export { app, redis };
 export default app;

@@ -8,74 +8,78 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Planned
-- `services/orchestrator` — Temporal agent pipeline (C.5)
 - `services/build` — Firecracker/gVisor sandboxed build service (C.7)
 - `services/publish` — Deployment, routing, custom domains (C.8)
 - `services/design` — Design system extraction from rendered styles (C.9)
 - `services/git` — GitHub/GitLab export and bidirectional sync
 - `apps/api` — Full BFF with project, run, artifact, credits, admin routes
 - `apps/studio-web` — Builder UI (Home, Builder Shell, Plan Review, Preview Host, Visual Edit, Publish, Admin)
-- `packages/sdk` — `@stackby/studio-sdk` full React hooks implementation
 - `packages/ui` — Shared Radix UI component library
 - Eval harness — 200+ golden cases for `packages/prompts`
 
 ---
 
+## [0.5.0] — 2026-09-01
+
+### Added — `packages/prompts` (prompt assembly + B.0–B.13 agent prompt library)
+
+**Prompt assembly infrastructure:**
+Cache-optimised assembly with stable segment ordering that maximises Anthropic
+prompt-cache hits: `[sharedPreamble] → [sdkDocs] → [schema] → [tokens] → [plan] → [conversation] → [turnInstruction]`.
+Stable content always heads the prompt so the first 2 segments get a cache hit on every
+LLM call. Ships 8 typed agent instructions via `AGENTS` and a single `buildPrompt()` entry-point.
+
+**B.0–B.13 Agent Prompt Library** (`PROMPT_VERSION = "1.5.0"`):
+Full set of 14 agent prompt definitions, 14 typed zod output schemas, and 13
+`build*Messages` functions for composing LLM calls. Covers the complete generation
+pipeline (B.1–B.9) plus out-of-pipeline real-time stages (B.10–B.13). Every schema
+enforces its structural invariants at parse time — blocker+pass conflicts, binding_ref
+cross-references, path-traversal guards, token mutual exclusion, and more.
+
+See `docs/agent-prompts/B0–B13.md` for the full prompt library.
+
+**Test counts:** 12 assembly + 208 prompt + 44 schema-types (all passing)
+
+---
+
 ## [0.4.0] — 2026-09-01
 
-### Added — B.0–B.13 Agent Prompt Library (`packages/prompts` + `packages/schema-types`)
+### Added — `services/orchestrator` (C.5 Temporal agent pipeline)
 
-Full implementation of the Stackby Studio agent prompt library: 14 prompt definitions
-(B.0–B.13), 14 typed zod output schemas, 13 `build*Messages` functions for composing
-LLM calls, and 208 test cases across two packages. `PROMPT_VERSION = "1.4.0"`.
+Full Temporal worker implementation running the Studio generation pipeline.
 
-**Prompt docs (`docs/agent-prompts/`)**
+**`GenerationWorkflow` — 12-activity pipeline:**
 
-| ID | Stage | Role |
-|----|-------|------|
-| B.0 | Shared preamble | Invariants, context slots, Stackby platform facts — prepended to every agent |
-| B.1 | Intent Analyst | Free-form request → structured intent (goal, artifact type, capabilities, ambiguities) |
-| B.2 | Schema Analyst | Intent + schema graph + sampled rows → table roles, semantic profile, candidate bindings, data-quality warnings |
-| B.3 | Clarifier | Earn at most 3 structural questions (three-part gate); exactly one recommended option per question |
-| B.4 | Planner | Pages → sections → bindings → visual direction; binding_ref cross-reference enforced at parse time |
-| B.5 | Designer | visual_direction → full token set (light + dark), layout grammar, 8 chart colours, WCAG contrast report |
-| B.6 | Code Generator | write/patch/delete file ops; path-traversal guard, write+delete conflict, `stackby.config.json` protected |
-| B.7 | Visual Verifier | Multimodal; screenshots → pass/fix/fail verdict; pass+blocker enforced at parse time; typed `VerifierMessagePart` |
-| B.8 | Fixer | Targeted repair ops + resolved/unresolved report; id overlap guard; inherits all CodeGen path-safety rules |
-| B.9 | Summariser | Run trace → headline (≤8 words), steps, verdict line, what changed, ≤2 suggested next prompts |
-| B.10 | Visual Edit | Direct-manipulation change → minimal source patch; 6% token-snap; `token_used`/`token_proposed` mutual exclusion |
-| B.11 | Annotation Edit | Pin-comment annotations → per-annotation applied/needs_input/conflicts_with_plan; `validateAnnotationCoverage` helper |
-| B.12 | Stack Generator | Natural language → full Stackby stack; forward-reference guard, column ordering, duplicate key/row checks |
-| B.13 | Template Remap | Template schema → field mappings with confidence/basis; create_column vs ask_user; ≤3 questions |
+| Activity | Tier | Notes |
+|----------|------|-------|
+| `analyzeIntent` | T1 | Classifies prompt → artifact type + intent |
+| `analyzeSchema` | T1 | Calls `services/schema` profile endpoint |
+| `clarify` | T1 | Emits ≤3 questions; **SUSPENDS** on `clarifyResponse` signal |
+| `generatePlan` | T2 | Persists plan; **SUSPENDS** for `approvePlan`/`rejectPlan` signal (up to 7 days) |
+| `generateDesign` | T2 | Design context and token mapping |
+| `generateCode` | T2 | Emits `FileOperation[]`; streams `codegen` events |
+| `applyOperations` | — | Deterministic; rejects duplicate path writes |
+| `buildArtifact` | — | Calls `services/build`; emits build progress events |
+| `verifyVisually` | T3 | Screenshot → vision model → pass/fail + issues |
+| `fixCode` | T2 | Patches root causes; loops back to apply (max 3 cycles) |
+| `summarise` | T0 | 2-sentence summary; emits `ready` event |
+| `finalise` | — | New version record, thumbnail, telemetry |
 
-**New zod schemas (`packages/schema-types/src/schemas/`)**
+**Suspension and signals:** `approvePlan`, `rejectPlan`, `clarifyResponse`, `cancel` — all via Temporal signals. Workflow waits up to 7 days for human review.
 
-- `intent.ts` — `IntentSchema`, `CapabilitySchema`, `IntentArtifactTypeSchema`, `AmbiguitySchema`
-- `schema-analysis.ts` — `SchemaAnalysisSchema`, `CandidateBindingSchema` (5,000-row cap enforced), `DataQualityWarningSchema`
-- `clarifier.ts` — `ClarifierOutputSchema` with `superRefine` enforcing exactly-one-recommended per question
-- `planner-output.ts` — `PlannerOutputSchema` with binding_ref cross-reference and design_system coherence checks
-- `designer-output.ts` — `DesignerOutputSchema`, `TokenSetSchema` (chart array length=8 enforced), radius literal constraints
-- `codegen-output.ts` — `CodeGenOutputSchema` with path-traversal guard, write+delete conflict, config file protection
-- `visual-verifier.ts` — `VisualVerifierOutputSchema` (pass+blocker rejected), `VerifierMessagePartSchema` (protocol-neutral image parts)
-- `fixer-output.ts` — `FixerOutputSchema` with resolved/unresolved overlap guard; accepts empty operations
-- `summariser-output.ts` — `SummariserOutputSchema` with 8-word headline `superRefine`, `artifact_uri` URL validation
-- `visual-edit.ts` — `VisualEditInputSchema`, `VisualEditOutputSchema` (`token_used`/`token_proposed` mutual exclusion)
-- `annotation-edit.ts` — `AnnotationEditOutputSchema` (duplicate id guard), `validateAnnotationCoverage` helper
-- `stack-generator.ts` — `StackGeneratorOutputSchema` (forward-reference guard, column ordering, duplicate key/row checks, hex color)
-- `template-remap.ts` — `TemplateRemapOutputSchema` (`create_column`/`asked_user` mutual exclusion, ≤3 questions, duplicate id guard)
+**Resilience:** Every activity has a Redis idempotency key keyed to `{workflowId}:{activity}:{attempt}` — a worker crash mid-run resumes from the last successful activity with no duplicated side effects or double-charges.
 
-**`packages/prompts` builders**
+**RunEvent streaming:** Every activity calls `emitEvent` → `XADD run:events:{runId}` → SSE relay at `GET /runs/:runId/events?from={seq}` replays from any sequence number. A client that reloads mid-run resumes exactly where it stopped.
 
-Each builder composes `B0_PREAMBLE + B{n}_BODY` as the system prompt and XML-escapes
-all user-controlled context slots into a typed user message:
+**LLM cost tracking:** Every LLM call records `modelId`, `tokensIn`, `tokensOut`, `cachedTokens`, `latencyMs`, and USD cost estimate to `run_steps` table and ClickHouse.
 
-`buildIntentMessages` · `buildSchemaAnalystMessages` · `buildClarifierMessages` ·
-`buildPlannerMessages` · `buildDesignerMessages` · `buildCodeGeneratorMessages` ·
-`buildVisualVerifierMessages` (returns `{system, userParts: VerifierMessagePart[]}`) ·
-`buildFixerMessages` · `buildSummariserMessages` · `buildVisualEditMessages` ·
-`buildAnnotationEditMessages` · `buildStackGeneratorMessages` · `buildTemplateRemapMessages`
+**4 variant workflows:**
+- `VisualEditWorkflow` — single patch, skips planning, skips verify unless layout-affecting
+- `AnnotationWorkflow` — batch annotations → scoped edits, critical-first ordering
+- `StackGenerationWorkflow` — creates synthetic Stackby stacks (B.12)
+- `DesignExtractionWorkflow` — cancellable, streaming, resumable (C.9)
 
-**Test counts:** 44 schema-types · 208 prompts (all passing)
+**Files:** 39 new files · 22/22 tests passing
 
 ---
 
