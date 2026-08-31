@@ -1,0 +1,28 @@
+{
+  "name": "@stackby/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --pool=forks",
+    "lint": "eslint src --ext .ts",
+    "migrate": "drizzle-kit migrate",
+    "studio": "drizzle-kit studio",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@stackby/schema-types": "workspace:*",
+    "drizzle-orm": "^0.30.0",
+    "pg": "^8.11.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0",
+    "drizzle-kit": "^0.20.0",
+    "typescript": "*",
+    "vitest": "^1.5.0",
+    "testcontainers": "^10.9.0"
+  }
+}
