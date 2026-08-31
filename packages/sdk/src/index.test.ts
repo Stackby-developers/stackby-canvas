@@ -1,6 +1,8 @@
 import { it, expect } from 'vitest';
-import { SDK_VERSION } from './index.js';
+import { StackbyProvider, validateFilter, StackbyStudioClient } from './index.js';
 
-it('sdk module loads and exports version', () => {
-  expect(SDK_VERSION).toBe('0.0.1');
+it('sdk module loads and exports key symbols', () => {
+  expect(StackbyProvider).toBeDefined();
+  expect(validateFilter).toBeDefined();
+  expect(StackbyStudioClient).toBeDefined();
 });
