@@ -56,13 +56,6 @@ Multi-provider LLM router with failover, budget enforcement, PII safety, and str
 **Orchestrator wired up:** `services/orchestrator/src/activities/shared/llm-router.ts` replaced with a thin `ModelRouter` wrapper. No Anthropic SDK import in the orchestrator anymore.
 
 **Files:** 30 files changed · **34/34 tests passing**
-- `services/publish` — Deployment, routing, custom domains (C.8)
-- `services/design` — Design system extraction from rendered styles (C.9)
-- `services/git` — GitHub/GitLab export and bidirectional sync
-- `apps/api` — Full BFF with project, run, artifact, credits, admin routes
-- `apps/studio-web` — Builder UI (Home, Builder Shell, Plan Review, Preview Host, Visual Edit, Publish, Admin)
-- `packages/ui` — Shared Radix UI component library
-- Eval harness — 200+ golden cases for `packages/prompts`
 
 ---
 
