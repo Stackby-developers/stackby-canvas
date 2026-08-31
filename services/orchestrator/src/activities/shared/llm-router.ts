@@ -1,7 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { ModelRouter, loadRouterConfig } from '@stackby/model-router';
+import type { LLMRequest } from '@stackby/model-router';
+import type { ModelTier } from '@stackby/model-router';
 import type { Config } from '../../config.js';
 
-export type ModelTier = 'T0' | 'T1' | 'T2' | 'T3';
+export type { ModelTier };
 
 export interface LLMCallOptions {
   tier: ModelTier;
@@ -23,57 +25,55 @@ export interface LLMCallResult {
 
 export type LLMRouter = (opts: LLMCallOptions) => Promise<LLMCallResult>;
 
-const COST_PER_MTK: Record<string, { in: number; out: number; cache: number }> = {
-  'claude-haiku-4-5-20251001': { in: 0.00025, out: 0.00125, cache: 0.00003 },
-  'claude-sonnet-5': { in: 0.003, out: 0.015, cache: 0.0003 },
-  'claude-opus-5': { in: 0.015, out: 0.075, cache: 0.0015 },
-};
-
-export function createLLMRouter(config: Pick<Config, 'ANTHROPIC_API_KEY' | 'MODEL_T0' | 'MODEL_T1' | 'MODEL_T2' | 'MODEL_T3'>): LLMRouter {
-  const client = new Anthropic({ apiKey: config.ANTHROPIC_API_KEY });
-  const tierModel: Record<ModelTier, string> = {
-    T0: config.MODEL_T0,
-    T1: config.MODEL_T1,
-    T2: config.MODEL_T2,
-    T3: config.MODEL_T3,
+export function createLLMRouter(config: Pick<Config, 'ANTHROPIC_API_KEY'>): LLMRouter {
+  const routerConfig = loadRouterConfig();
+  const systemKeys: Partial<Record<'anthropic' | 'openai' | 'google' | 'bedrock' | 'azure', string>> = {
+    anthropic: config.ANTHROPIC_API_KEY,
   };
+  const openaiKey = process.env['OPENAI_API_KEY'];
+  if (openaiKey) systemKeys.openai = openaiKey;
+  const googleKey = process.env['GOOGLE_API_KEY'];
+  if (googleKey) systemKeys.google = googleKey;
+
+  const router = new ModelRouter(routerConfig, systemKeys);
 
   return async function callLLM(opts: LLMCallOptions): Promise<LLMCallResult> {
-    const modelId = tierModel[opts.tier];
-    const start = Date.now();
+    const messages: LLMRequest['messages'] = [
+      {
+        role: 'user',
+        content: opts.images?.length
+          ? [
+              ...opts.images.map((img) => ({
+                type: 'image' as const,
+                image: { base64: img.base64, mediaType: img.mediaType },
+              })),
+              { type: 'text' as const, text: opts.prompt },
+            ]
+          : opts.prompt,
+      },
+    ];
 
-    const content: Anthropic.MessageParam['content'] = opts.images?.length
-      ? [
-          ...opts.images.map((img) => ({
-            type: 'image' as const,
-            source: { type: 'base64' as const, media_type: img.mediaType as 'image/png', data: img.base64 },
-          })),
-          { type: 'text' as const, text: opts.prompt },
-        ]
-      : opts.prompt;
+    const req: LLMRequest = { messages };
+    if (opts.systemPrompt !== undefined) req.systemPrompt = opts.systemPrompt;
+    if (opts.maxTokens !== undefined) req.maxTokens = opts.maxTokens;
 
-    const response = await client.messages.create({
-      model: modelId,
-      max_tokens: opts.maxTokens ?? 8192,
-      ...(opts.systemPrompt ? { system: opts.systemPrompt } : {}),
-      messages: [{ role: 'user', content }],
-    });
+    const response = await router.call(req, opts.tier);
 
-    const latencyMs = Date.now() - start;
-    const tokensIn = response.usage.input_tokens;
-    const tokensOut = response.usage.output_tokens;
-    const cachedTokens = (response.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens ?? 0;
-    const pricing = COST_PER_MTK[modelId] ?? COST_PER_MTK['claude-sonnet-5']!;
+    // Cost is reported by the router via its ledger; re-derive for the result payload
+    // using the actual usage from the response rather than config constants.
     const cost =
-      (tokensIn / 1_000_000) * pricing.in +
-      (tokensOut / 1_000_000) * pricing.out +
-      (cachedTokens / 1_000_000) * pricing.cache;
+      (response.usage.tokensIn / 1_000_000) * 3.0 +
+      (response.usage.tokensOut / 1_000_000) * 15.0 +
+      (response.usage.cacheReadTokens / 1_000_000) * 0.30;
 
-    const text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('');
-
-    return { content: text, modelId, tokensIn, tokensOut, cachedTokens, latencyMs, cost };
+    return {
+      content: response.content,
+      modelId: response.modelId,
+      tokensIn: response.usage.tokensIn,
+      tokensOut: response.usage.tokensOut,
+      cachedTokens: response.usage.cacheReadTokens,
+      latencyMs: response.latencyMs,
+      cost,
+    };
   };
 }

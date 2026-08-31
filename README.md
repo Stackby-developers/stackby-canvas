@@ -88,6 +88,7 @@ These are never violated:
 - [x] **`services/gateway`** — Data Gateway (C.3) — auth, permission isolation, coalescing cache, token bucket, stale-while-revalidate, writes, aggregation · 45 tests
 - [x] **`services/schema`** — Schema Service (C.2) — introspection, semantic profiling, row sampling, type generation, drift detection · 47 tests
 - [x] **`services/orchestrator`** — Temporal agent pipeline (C.5) — GenerationWorkflow (12 activities, signals, 3-cycle self-heal), 4 variant workflows, Redis Streams SSE relay · 22 tests
+- [x] **`packages/model-router`** — C.6 — 5-provider router, config-driven tiers, failover, budget enforcement, PII guard, structured output retry · 34 tests
 - [ ] **`services/build`** — Sandboxed build + screenshot service (C.7) — Firecracker/gVisor, 90s timeout
 - [ ] **`services/publish`** — Deployments, routing, custom domains (C.8)
 - [ ] **`services/design`** — Design system extraction (C.9)

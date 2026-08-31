@@ -18,7 +18,8 @@
       "@stackby/schema-types": ["./packages/schema-types/src/index.ts"],
       "@stackby/studio-sdk": ["./packages/sdk/src/index.ts"],
       "@stackby/prompts": ["./packages/prompts/src/index.ts"],
-      "@stackby/ui": ["./packages/ui/src/index.ts"]
+      "@stackby/ui": ["./packages/ui/src/index.ts"],
+      "@stackby/model-router": ["./packages/model-router/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "**/dist/**", "**/.next/**"]

@@ -10,6 +10,53 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Planned
 - `services/build` — Firecracker/gVisor sandboxed build service (C.7)
 - `services/publish` — Deployment, routing, custom domains (C.8)
+- `services/design` — Design system extraction (C.9)
+- `services/git` — GitHub/GitLab export and bidirectional sync
+- `apps/api` — Full BFF routes
+- `apps/studio-web` — Builder UI
+- `packages/ui` — Radix UI component library
+- `packages/prompts` — 200+ golden eval cases
+
+---
+
+## [0.6.0] — 2026-09-01
+
+### Added — `packages/model-router` (C.6 Model Router)
+
+Multi-provider LLM router with failover, budget enforcement, PII safety, and structured output validation.
+
+**Config-driven tier mapping** (`config/router-config.json` — no model IDs in code):
+
+| Tier | Label | Primary | Fallback |
+|------|-------|---------|---------|
+| T0 | nano | `claude-haiku-4-5-20251001` | `gpt-4o-mini` |
+| T1 | fast | `claude-sonnet-5` | `gpt-4o` |
+| T2 | frontier | `claude-sonnet-5` | `claude-haiku-4-5-20251001` |
+| T3 | vision | `claude-opus-5` | `gpt-4o` |
+
+**Failover:** On error or timeout, advances to the next candidate in the tier. One retry per candidate. Every attempt recorded in `MetricsTracker`. Killing the primary is fully transparent — proven by `router.test.ts` which kills the Anthropic adapter and asserts the OpenAI fallback delivers the response.
+
+**Providers:** Anthropic (full), OpenAI (full), Google/Bedrock/Azure (interface-compliant stubs ready for credentials). Single `ProviderAdapter` interface: `call(request, candidate, apiKey) → LLMResponse`.
+
+**Prompt caching:** Anthropic adapter marks `cacheablePrefix` as `cache_control: {type: 'ephemeral'}`. `LLMResponse` carries `cacheHit: boolean` and `usage.cacheReadTokens`. `MetricsTracker.aggregate()` reports `cacheHitRate` as a first-class metric.
+
+**Budget enforcement:**
+- Redis `INCRBYFLOAT` ledger tracks spend at run / project / workspace granularity
+- `BudgetEnforcer` checks ceilings before every call; raises `BudgetExceededError` carrying `resumeInstructions` (FR-13.2)
+- `BudgetExceededError.toStudioError()` produces the typed `StudioError` shape consumed by the API
+
+**BYO keys:** `WorkspaceCredentials.providerKeys` overrides system API keys per provider. `WorkspaceCredentials.allowedProviders` filters the candidate list before routing.
+
+**Structured output:** `callWithSchema(router, request, zodSchema, tier)` — validates JSON response; on failure appends the validation error and retries once. Proven by `structured.test.ts`: first response is malformed, second (with error context) is valid; recovery confirmed.
+
+**Safety:** `guardPii(request)` scans message content for PII-tagged field names before any network call; raises `PIIRefusedError` immediately.
+
+**Cost reconciliation:** `cost-reconciliation.test.ts` replays a recorded month of calls with known token counts and asserts computed cost is within 2% of expected.
+
+**Orchestrator wired up:** `services/orchestrator/src/activities/shared/llm-router.ts` replaced with a thin `ModelRouter` wrapper. No Anthropic SDK import in the orchestrator anymore.
+
+**Files:** 30 files changed · **34/34 tests passing**
+- `services/publish` — Deployment, routing, custom domains (C.8)
 - `services/design` — Design system extraction from rendered styles (C.9)
 - `services/git` — GitHub/GitLab export and bidirectional sync
 - `apps/api` — Full BFF with project, run, artifact, credits, admin routes
