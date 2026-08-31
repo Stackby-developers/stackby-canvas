@@ -38,6 +38,17 @@ STANDARDS
 - Redis for cache, locks, token buckets and queues.
 - Tests: Vitest for unit, Testcontainers for integration. Coverage floor 80% on
   services/gateway and services/schema (the safety-critical paths).
+
+STACKBY PLATFORM CONSTRAINTS — non-negotiable
+Use Stackby Personal Access Token for the account to get the base/stack data.
+- 5 requests/second/stack. 429 with a 30s cooldown on breach.
+- GET list paginates above 100 rows via `offset`.
+- POST/PATCH/PUT/DELETE accept at most 10 record objects per request.
+- Column types: text, multilineText, number, currency, percent, checkbox, select,
+  multiSelect, date, dateTime, duration, progress, rating, url, email, phone, barcode,
+  formula, link, lookup, rollup, count, collaborator, multiCollaborator,
+  multipleAttachment, createdTime, lastModifiedTime, autoNumber, button, plus
+  API-integration columns. formula/lookup/rollup/count/autoNumber are read-only.
 ```
 
 ---
@@ -56,3 +67,13 @@ STANDARDS
   Temporal orchestrator retries the activity automatically.
 - **RLS** — every Postgres table scoped to a workspace must have a `workspace_id`
   column and a corresponding `ENABLE ROW LEVEL SECURITY` + policy. No exceptions.
+- **Rate limiting** — the gateway must enforce the 5 req/s/stack ceiling with a
+  Redis token bucket before forwarding to Stackby. On 429 from Stackby, back off
+  for 30s and surface `retryable: true` so Temporal retries automatically.
+- **Pagination** — any gateway code fetching a full table must loop on `offset`
+  until no next page is returned. Never assume a single page contains all rows.
+- **Batch writes** — POST/PATCH/PUT/DELETE must chunk input arrays into groups of
+  10 before sending to Stackby. Exceeding 10 records per request is a hard API error.
+- **Read-only columns** — `formula`, `lookup`, `rollup`, `count`, and `autoNumber`
+  columns must be stripped from write payloads by the gateway before forwarding.
+  Attempting to write these returns a Stackby API error; never pass them through.
