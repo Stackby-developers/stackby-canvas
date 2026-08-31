@@ -1,0 +1,466 @@
+{
+  "stackId": "stk_acme_pm",
+  "stackName": "ACME Project Management",
+  "tables": [
+    {
+      "id": "tbl_clients",
+      "name": "Clients",
+      "primaryColumnId": "col_client_name",
+      "columns": [
+        {
+          "id": "col_client_name",
+          "name": "Name",
+          "type": "text"
+        },
+        {
+          "id": "col_client_email",
+          "name": "Email",
+          "type": "email"
+        },
+        {
+          "id": "col_client_phone",
+          "name": "Phone",
+          "type": "phone"
+        },
+        {
+          "id": "col_client_industry",
+          "name": "Industry",
+          "type": "select",
+          "options": {
+            "choices": [
+              {
+                "id": "ch_tech",
+                "name": "Technology",
+                "color": "blue"
+              },
+              {
+                "id": "ch_fin",
+                "name": "Finance",
+                "color": "green"
+              },
+              {
+                "id": "ch_health",
+                "name": "Healthcare",
+                "color": "red"
+              },
+              {
+                "id": "ch_retail",
+                "name": "Retail",
+                "color": "yellow"
+              },
+              {
+                "id": "ch_other",
+                "name": "Other",
+                "color": "gray"
+              }
+            ]
+          }
+        }
+      ],
+      "views": [
+        {
+          "id": "vw_clients_grid",
+          "name": "All Clients",
+          "type": "grid"
+        },
+        {
+          "id": "vw_clients_gallery",
+          "name": "Client Cards",
+          "type": "gallery"
+        }
+      ]
+    },
+    {
+      "id": "tbl_projects",
+      "name": "Projects",
+      "primaryColumnId": "col_project_name",
+      "columns": [
+        {
+          "id": "col_project_name",
+          "name": "Name",
+          "type": "text"
+        },
+        {
+          "id": "col_project_status",
+          "name": "Status",
+          "type": "select",
+          "options": {
+            "choices": [
+              {
+                "id": "ch_draft",
+                "name": "Draft",
+                "color": "gray"
+              },
+              {
+                "id": "ch_active",
+                "name": "Active",
+                "color": "blue"
+              },
+              {
+                "id": "ch_completed",
+                "name": "Completed",
+                "color": "green"
+              }
+            ]
+          }
+        },
+        {
+          "id": "col_project_budget",
+          "name": "Budget",
+          "type": "currency",
+          "options": {
+            "symbol": "$",
+            "precision": 2
+          }
+        },
+        {
+          "id": "col_project_client",
+          "name": "Client",
+          "type": "link",
+          "options": {
+            "linkedTableId": "tbl_clients"
+          }
+        },
+        {
+          "id": "col_project_client_name",
+          "name": "Client Name",
+          "type": "lookup",
+          "options": {
+            "linkedTableId": "tbl_clients",
+            "linkedColumnId": "col_client_name"
+          }
+        },
+        {
+          "id": "col_project_task_count",
+          "name": "Task Count",
+          "type": "count",
+          "options": {
+            "linkedTableId": "tbl_tasks"
+          }
+        },
+        {
+          "id": "col_project_owner",
+          "name": "Owner",
+          "type": "collaborator"
+        },
+        {
+          "id": "col_project_start",
+          "name": "Start Date",
+          "type": "date"
+        },
+        {
+          "id": "col_project_due",
+          "name": "Due Date",
+          "type": "date"
+        },
+        {
+          "id": "col_project_brief",
+          "name": "Brief",
+          "type": "multipleAttachment"
+        }
+      ],
+      "views": [
+        {
+          "id": "vw_projects_grid",
+          "name": "All Projects",
+          "type": "grid"
+        },
+        {
+          "id": "vw_projects_kanban",
+          "name": "Kanban",
+          "type": "kanban"
+        },
+        {
+          "id": "vw_projects_gantt",
+          "name": "Timeline",
+          "type": "gantt"
+        }
+      ]
+    },
+    {
+      "id": "tbl_tasks",
+      "name": "Tasks",
+      "primaryColumnId": "col_task_name",
+      "columns": [
+        {
+          "id": "col_task_name",
+          "name": "Title",
+          "type": "text"
+        },
+        {
+          "id": "col_task_description",
+          "name": "Description",
+          "type": "multilineText"
+        },
+        {
+          "id": "col_task_status",
+          "name": "Status",
+          "type": "select",
+          "options": {
+            "choices": [
+              {
+                "id": "ch_todo",
+                "name": "Todo",
+                "color": "gray"
+              },
+              {
+                "id": "ch_inprogress",
+                "name": "In Progress",
+                "color": "blue"
+              },
+              {
+                "id": "ch_done",
+                "name": "Done",
+                "color": "green"
+              }
+            ]
+          }
+        },
+        {
+          "id": "col_task_priority",
+          "name": "Priority",
+          "type": "select",
+          "options": {
+            "choices": [
+              {
+                "id": "ch_low",
+                "name": "Low",
+                "color": "green"
+              },
+              {
+                "id": "ch_medium",
+                "name": "Medium",
+                "color": "yellow"
+              },
+              {
+                "id": "ch_high",
+                "name": "High",
+                "color": "red"
+              }
+            ]
+          }
+        },
+        {
+          "id": "col_task_due",
+          "name": "Due Date",
+          "type": "date"
+        },
+        {
+          "id": "col_task_remind",
+          "name": "Reminder",
+          "type": "dateTime"
+        },
+        {
+          "id": "col_task_assignee",
+          "name": "Assignee",
+          "type": "collaborator"
+        },
+        {
+          "id": "col_task_reviewers",
+          "name": "Reviewers",
+          "type": "multiCollaborator"
+        },
+        {
+          "id": "col_task_project",
+          "name": "Project",
+          "type": "link",
+          "options": {
+            "linkedTableId": "tbl_projects"
+          }
+        },
+        {
+          "id": "col_task_project_name",
+          "name": "Project Name",
+          "type": "lookup",
+          "options": {
+            "linkedTableId": "tbl_projects",
+            "linkedColumnId": "col_project_name"
+          }
+        },
+        {
+          "id": "col_task_client_name",
+          "name": "Client Name",
+          "type": "lookup",
+          "options": {
+            "linkedTableId": "tbl_projects",
+            "linkedColumnId": "col_project_client_name"
+          }
+        },
+        {
+          "id": "col_task_hours_est",
+          "name": "Estimated Hours",
+          "type": "number",
+          "options": {
+            "precision": 1
+          }
+        },
+        {
+          "id": "col_task_hours_act",
+          "name": "Actual Hours",
+          "type": "number",
+          "options": {
+            "precision": 1
+          }
+        },
+        {
+          "id": "col_task_cost",
+          "name": "Cost",
+          "type": "currency",
+          "options": {
+            "symbol": "$",
+            "precision": 2
+          }
+        },
+        {
+          "id": "col_task_completion",
+          "name": "Completion",
+          "type": "percent",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "id": "col_task_time",
+          "name": "Time Spent",
+          "type": "duration"
+        },
+        {
+          "id": "col_task_progress",
+          "name": "Progress",
+          "type": "progress"
+        },
+        {
+          "id": "col_task_rating",
+          "name": "Rating",
+          "type": "rating"
+        },
+        {
+          "id": "col_task_tags",
+          "name": "Tags",
+          "type": "multiSelect",
+          "options": {
+            "choices": [
+              {
+                "id": "ch_frontend",
+                "name": "Frontend",
+                "color": "blue"
+              },
+              {
+                "id": "ch_backend",
+                "name": "Backend",
+                "color": "green"
+              },
+              {
+                "id": "ch_design",
+                "name": "Design",
+                "color": "purple"
+              },
+              {
+                "id": "ch_qa",
+                "name": "QA",
+                "color": "orange"
+              }
+            ]
+          }
+        },
+        {
+          "id": "col_task_attachments",
+          "name": "Attachments",
+          "type": "multipleAttachment"
+        },
+        {
+          "id": "col_task_url",
+          "name": "Reference URL",
+          "type": "url"
+        },
+        {
+          "id": "col_task_contact_email",
+          "name": "Contact Email",
+          "type": "email"
+        },
+        {
+          "id": "col_task_contact_phone",
+          "name": "Contact Phone",
+          "type": "phone"
+        },
+        {
+          "id": "col_task_barcode",
+          "name": "Asset Code",
+          "type": "barcode"
+        },
+        {
+          "id": "col_task_billable",
+          "name": "Billable",
+          "type": "checkbox"
+        },
+        {
+          "id": "col_task_total_cost",
+          "name": "Total Cost",
+          "type": "formula",
+          "options": {
+            "formula": "{Cost} * {Actual Hours}"
+          }
+        },
+        {
+          "id": "col_task_total_est",
+          "name": "Total Estimated",
+          "type": "rollup",
+          "options": {
+            "linkedTableId": "tbl_projects",
+            "linkedColumnId": "col_project_budget"
+          }
+        },
+        {
+          "id": "col_task_subtask_count",
+          "name": "Subtask Count",
+          "type": "count",
+          "options": {
+            "linkedTableId": "tbl_tasks"
+          }
+        },
+        {
+          "id": "col_task_num",
+          "name": "Task #",
+          "type": "autoNumber"
+        },
+        {
+          "id": "col_task_created",
+          "name": "Created Time",
+          "type": "createdTime"
+        },
+        {
+          "id": "col_task_modified",
+          "name": "Last Modified",
+          "type": "lastModifiedTime"
+        },
+        {
+          "id": "col_task_approve",
+          "name": "Approve",
+          "type": "button"
+        }
+      ],
+      "views": [
+        {
+          "id": "vw_tasks_grid",
+          "name": "All Tasks",
+          "type": "grid"
+        },
+        {
+          "id": "vw_tasks_kanban",
+          "name": "By Status",
+          "type": "kanban"
+        },
+        {
+          "id": "vw_tasks_calendar",
+          "name": "Calendar",
+          "type": "calendar"
+        },
+        {
+          "id": "vw_tasks_form",
+          "name": "Submit Task",
+          "type": "form"
+        }
+      ]
+    }
+  ]
+}
