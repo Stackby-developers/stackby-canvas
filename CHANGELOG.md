@@ -8,16 +8,77 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Planned
-- `services/orchestrator` — Temporal agent pipeline (C.5)
 - `services/build` — Firecracker/gVisor sandboxed build service (C.7)
 - `services/publish` — Deployment, routing, custom domains (C.8)
 - `services/design` — Design system extraction from rendered styles (C.9)
 - `services/git` — GitHub/GitLab export and bidirectional sync
 - `apps/api` — Full BFF with project, run, artifact, credits, admin routes
 - `apps/studio-web` — Builder UI (Home, Builder Shell, Plan Review, Preview Host, Visual Edit, Publish, Admin)
-- `packages/sdk` — `@stackby/studio-sdk` full React hooks implementation
 - `packages/ui` — Shared Radix UI component library
-- `packages/prompts` — Versioned agent prompts + 200+ golden eval cases
+- `packages/prompts` — 200+ golden eval cases
+
+---
+
+## [0.5.0] — 2026-09-01
+
+### Added — `packages/prompts` (prompt assembly)
+
+Cache-optimised prompt assembly with stable segment ordering that maximises Anthropic
+prompt-cache hits: `[sharedPreamble] → [sdkDocs] → [schema] → [tokens] → [plan] → [conversation] → [turnInstruction]`.
+Stable content (preamble, SDK docs) always heads the prompt so the first 2 segments get a
+cache hit on every LLM call; per-stack schema adds a third cache hit on subsequent calls
+within the same run. Variable content (conversation, turn instruction) is always last.
+
+Ships 8 typed agent instruction strings exported via `AGENTS`:
+`intentAnalyzer`, `schemaAnalyzer`, `clarifier`, `planner`, `codeGenerator`,
+`visualVerifier`, `fixer`, `summariser`.
+
+`buildPrompt(agentInstruction, values)` is the single entry-point consumed by all
+orchestrator activities. Rejection feedback is injected into the turn segment, not the
+stable prefix, so it never busts the plan-segment cache.
+
+**Files:** 14 new files · 12/12 tests passing
+
+---
+
+## [0.4.0] — 2026-09-01
+
+### Added — `services/orchestrator` (C.5 Temporal agent pipeline)
+
+Full Temporal worker implementation running the Studio generation pipeline.
+
+**`GenerationWorkflow` — 12-activity pipeline:**
+
+| Activity | Tier | Notes |
+|----------|------|-------|
+| `analyzeIntent` | T1 | Classifies prompt → artifact type + intent |
+| `analyzeSchema` | T1 | Calls `services/schema` profile endpoint |
+| `clarify` | T1 | Emits ≤3 questions; **SUSPENDS** on `clarifyResponse` signal |
+| `generatePlan` | T2 | Persists plan; **SUSPENDS** for `approvePlan`/`rejectPlan` signal (up to 7 days) |
+| `generateDesign` | T2 | Design context and token mapping |
+| `generateCode` | T2 | Emits `FileOperation[]`; streams `codegen` events |
+| `applyOperations` | — | Deterministic; rejects duplicate path writes |
+| `buildArtifact` | — | Calls `services/build`; emits build progress events |
+| `verifyVisually` | T3 | Screenshot → vision model → pass/fail + issues |
+| `fixCode` | T2 | Patches root causes; loops back to apply (max 3 cycles) |
+| `summarise` | T0 | 2-sentence summary; emits `ready` event |
+| `finalise` | — | New version record, thumbnail, telemetry |
+
+**Suspension and signals:** `approvePlan`, `rejectPlan`, `clarifyResponse`, `cancel` — all via Temporal signals. Workflow waits up to 7 days for human review.
+
+**Resilience:** Every activity has a Redis idempotency key keyed to `{workflowId}:{activity}:{attempt}` — a worker crash mid-run resumes from the last successful activity with no duplicated side effects or double-charges.
+
+**RunEvent streaming:** Every activity calls `emitEvent` → `XADD run:events:{runId}` → SSE relay at `GET /runs/:runId/events?from={seq}` replays from any sequence number. A client that reloads mid-run resumes exactly where it stopped.
+
+**LLM cost tracking:** Every LLM call records `modelId`, `tokensIn`, `tokensOut`, `cachedTokens`, `latencyMs`, and USD cost estimate to `run_steps` table and ClickHouse.
+
+**4 variant workflows:**
+- `VisualEditWorkflow` — single patch, skips planning, skips verify unless layout-affecting
+- `AnnotationWorkflow` — batch annotations → scoped edits, critical-first ordering
+- `StackGenerationWorkflow` — creates synthetic Stackby stacks (B.12)
+- `DesignExtractionWorkflow` — cancellable, streaming, resumable (C.9)
+
+**Files:** 39 new files · 22/22 tests passing
 
 ---
 
