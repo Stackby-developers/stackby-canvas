@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge, Tabs, TabsContent, TabsList, TabsTrigger } from '@stackby/ui';
+import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 import { CreditsTab } from './credits-tab';
 import { ArtifactsTab } from './artifacts-tab';
 import { PolicyTab } from './policy-tab';
@@ -14,7 +15,7 @@ export function AdminConsole() {
           <h1 className="text-2xl font-semibold tracking-tight text-text">Admin Console</h1>
           <p className="mt-1 text-sm text-text-muted">Workspace governance and usage monitoring</p>
         </div>
-        <Badge variant="warning">dev-workspace</Badge>
+        <Badge variant="warning">{DEV_WORKSPACE_ID.slice(-8)}</Badge>
       </div>
 
       <Tabs defaultValue="credits">

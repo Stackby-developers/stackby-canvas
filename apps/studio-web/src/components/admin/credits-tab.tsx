@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Progress, Spinner } from '@stackby/ui';
+import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 
 interface UsageDay {
   period: string;
@@ -26,8 +27,8 @@ export function CreditsTab() {
   useEffect(() => {
     setLoading(true);
     void Promise.all([
-      fetch('/api/credits/balance?workspaceId=dev-workspace').then((r) => r.json() as Promise<CreditBalance>),
-      fetch(`/api/admin/usage?workspaceId=dev-workspace&period=${period}&groupBy=day`).then(
+      fetch('/api/credits/balance?workspaceId=DEV_WORKSPACE_ID').then((r) => r.json() as Promise<CreditBalance>),
+      fetch(`/api/admin/usage?workspaceId=DEV_WORKSPACE_ID&period=${period}&groupBy=day`).then(
         (r) => r.json() as Promise<{ usage: UsageDay[] }>,
       ),
     ])

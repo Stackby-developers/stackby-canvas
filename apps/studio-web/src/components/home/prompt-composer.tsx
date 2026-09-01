@@ -9,6 +9,7 @@ import { StackPicker } from './stack-picker';
 import { ArtifactTypePicker } from './artifact-type-picker';
 import { VoiceInputButton } from './voice-input-button';
 import { AttachmentZone } from './attachment-zone';
+import { DEV_WORKSPACE_ID, DEV_USER_ID } from '@/src/lib/dev-constants';
 
 const MAX_CHARS = 4000;
 const WARN_AT = 3500;
@@ -37,8 +38,8 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          workspaceId: 'dev-workspace',
-          userId: '00000000-0000-0000-0000-000000000001',
+          workspaceId: DEV_WORKSPACE_ID,
+          userId: DEV_USER_ID,
           name: prompt.slice(0, 60),
           stackId,
           artifactType,

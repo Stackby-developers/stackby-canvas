@@ -10,6 +10,7 @@ import {
 } from '@stackby/ui';
 import { DesignSystemCard } from './design-system-card';
 import type { DesignSystemRecord } from '@/src/lib/design-system-types';
+import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 
 interface DesignSystemsListProps {
   designSystems: DesignSystemRecord[];
@@ -29,9 +30,8 @@ export function DesignSystemsList({ designSystems }: DesignSystemsListProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          workspaceId: 'dev-workspace',
+          workspaceId: DEV_WORKSPACE_ID,
           name: newName.trim(),
-          createdByUserId: 'dev-user',
         }),
       });
       const ds = (await res.json()) as DesignSystemRecord;

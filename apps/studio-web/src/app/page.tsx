@@ -1,11 +1,12 @@
 import { PromptComposer } from '@/src/components/home/prompt-composer';
 import { TemplateStrip } from '@/src/components/home/template-strip';
+import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 
 export default async function HomePage() {
   let recentStacks: Array<{ id: string; name: string }> = [];
   try {
     const apiUrl = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000';
-    const res = await fetch(`${apiUrl}/v1/projects?workspaceId=dev-workspace`, {
+    const res = await fetch(`${apiUrl}/v1/projects?workspaceId=${DEV_WORKSPACE_ID}`, {
       next: { revalidate: 60 },
     });
     if (res.ok) {

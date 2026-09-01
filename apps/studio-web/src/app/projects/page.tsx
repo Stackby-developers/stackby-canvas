@@ -1,5 +1,6 @@
 import { ProjectsList } from '@/src/components/projects/projects-list';
 import type { Project } from '@/src/lib/types';
+import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,7 +8,7 @@ export default async function ProjectsPage() {
   let projects: Project[] = [];
   try {
     const apiUrl = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000';
-    const res = await fetch(`${apiUrl}/v1/projects?workspaceId=dev-workspace`, {
+    const res = await fetch(`${apiUrl}/v1/projects?workspaceId=${DEV_WORKSPACE_ID}`, {
       cache: 'no-store',
     });
     if (res.ok) {

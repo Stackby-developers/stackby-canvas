@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ShieldOff } from 'lucide-react';
+import { DEV_WORKSPACE_ID, DEV_USER_ID } from '@/src/lib/dev-constants';
 import {
   Badge,
   Button,
@@ -35,7 +36,7 @@ export function ArtifactsTab() {
   const [unpublishing, setUnpublishing] = useState(false);
 
   useEffect(() => {
-    fetch('/api/admin/artifacts?workspaceId=dev-workspace&limit=50&offset=0')
+    fetch('/api/admin/artifacts?workspaceId=DEV_WORKSPACE_ID&limit=50&offset=0')
       .then((r) => r.json() as Promise<{ artifacts: Artifact[] }>)
       .then(({ artifacts: a }) => setArtifacts(a))
       .catch(() => {})
@@ -49,7 +50,7 @@ export function ArtifactsTab() {
       await fetch(`/api/admin/artifacts/${confirmId}/force-unpublish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workspaceId: 'dev-workspace', adminId: 'dev-admin' }),
+        body: JSON.stringify({ workspaceId: 'DEV_WORKSPACE_ID', adminId: 'DEV_USER_ID' }),
       });
       setArtifacts((prev) =>
         prev.map((a) =>

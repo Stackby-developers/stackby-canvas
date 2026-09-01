@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button, Input, Separator, Spinner } from '@stackby/ui';
+import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 
 interface Policy {
   workspaceId: string;
@@ -43,7 +44,7 @@ export function PolicyTab() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/policy?workspaceId=dev-workspace')
+    fetch('/api/admin/policy?workspaceId=DEV_WORKSPACE_ID')
       .then((r) => r.json() as Promise<Policy>)
       .then((p) => {
         setPolicy(p);
@@ -72,7 +73,7 @@ export function PolicyTab() {
       await fetch('/api/admin/policy', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...draft, workspaceId: 'dev-workspace' }),
+        body: JSON.stringify({ ...draft, workspaceId: 'DEV_WORKSPACE_ID' }),
       });
       setPolicy(draft);
       setSaved(true);

@@ -5,6 +5,7 @@ import { Download } from 'lucide-react';
 import { Badge, Button, Input, Spinner } from '@stackby/ui';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@stackby/ui';
 import { formatRelativeTime } from '@/src/lib/format';
+import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 
 interface AuditEntry {
   id: string;
@@ -28,7 +29,7 @@ export function AuditTab() {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       setLoading(true);
-      const params = new URLSearchParams({ workspaceId: 'dev-workspace', limit: '100', offset: '0' });
+      const params = new URLSearchParams({ workspaceId: 'DEV_WORKSPACE_ID', limit: '100', offset: '0' });
       if (action) params.set('action', action);
       if (actorId) params.set('actorId', actorId);
       if (dateFrom) params.set('dateFrom', dateFrom);
@@ -47,7 +48,7 @@ export function AuditTab() {
 
   function handleExportCsv() {
     const params = new URLSearchParams({
-      workspaceId: 'dev-workspace',
+      workspaceId: 'DEV_WORKSPACE_ID',
       format: 'csv',
       limit: '1000',
       offset: '0',

@@ -22,11 +22,9 @@ export interface DesignSystemRecord {
   id: string;
   workspaceId: string;
   name: string;
-  brandUrl?: string;
-  notes?: string;
   tokens?: DesignTokens;
+  isDefault: boolean;
   version: number;
-  createdByUserId: string;
   createdAt: string;
   updatedAt: string;
 }

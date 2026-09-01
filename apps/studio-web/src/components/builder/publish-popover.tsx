@@ -7,6 +7,7 @@ import {
   Button, Input, Badge, Tooltip, TooltipTrigger, TooltipContent,
 } from '@stackby/ui';
 import { VersionHistory } from './version-history';
+import { DEV_WORKSPACE_ID, DEV_USER_ID } from '@/src/lib/dev-constants';
 
 type VisibilityMode = 'stack_collaborators' | 'workspace' | 'link' | 'password' | 'public';
 type PublishStep = 'configure' | 'confirm_public' | 'done';
@@ -81,14 +82,14 @@ export function PublishPopover({ projectId, runId, plan, isReady }: PublishPopov
     setError(null);
     try {
       const body: Record<string, unknown> = {
-        workspaceId: 'dev-workspace',
+        workspaceId: DEV_WORKSPACE_ID,
         projectId,
         artifactId: runId ?? projectId,
         versionId: runId ?? projectId,
         buildHash: 'dev',
         visibility,
         permissions: { camera: false, clipboardRead: false, clipboardWrite: false, geolocation: false },
-        publishedByUserId: 'dev-user',
+        publishedByUserId: DEV_USER_ID,
       };
       if (slug.trim()) body['slug'] = slug.trim();
       if (visibility === 'password' && password) body['passwordHash'] = password;
@@ -98,7 +99,7 @@ export function PublishPopover({ projectId, runId, plan, isReady }: PublishPopov
           columnsBecomingReadable: plan?.steps.flatMap((s) =>
             s.columns.map((col) => ({ columnId: col, columnName: col, tableId: s.tables[0] ?? '' })),
           ) ?? [],
-          confirmedByUserId: 'dev-user',
+          confirmedByUserId: DEV_USER_ID,
           confirmedAt: new Date().toISOString(),
         };
       }

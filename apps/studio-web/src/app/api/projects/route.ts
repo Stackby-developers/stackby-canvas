@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 
 const API_URL = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  const workspaceId = req.nextUrl.searchParams.get('workspaceId') ?? 'dev-workspace';
+  const workspaceId = req.nextUrl.searchParams.get('workspaceId') ?? DEV_WORKSPACE_ID;
   const upstream = await fetch(`${API_URL}/v1/projects?workspaceId=${encodeURIComponent(workspaceId)}`);
   const data: unknown = await upstream.json();
   return NextResponse.json(data, { status: upstream.status });

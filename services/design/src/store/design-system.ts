@@ -6,11 +6,9 @@ export interface DesignSystemRecord {
   id: string;
   workspaceId: string;
   name: string;
-  brandUrl: string | undefined;
-  notes: string | undefined;
   tokens: DesignTokens | undefined;
+  isDefault: boolean;
   version: number;
-  createdByUserId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,15 +19,11 @@ export class DesignSystemStore {
   async create(input: {
     workspaceId: string;
     name: string;
-    brandUrl: string | undefined;
-    notes: string | undefined;
-    createdByUserId: string;
   }): Promise<DesignSystemRecord> {
     const id = randomUUID();
     await this.pool.query(
-      `INSERT INTO design_systems (id, workspace_id, name, brand_url, notes, version, created_by, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,1,$6,NOW(),NOW())`,
-      [id, input.workspaceId, input.name, input.brandUrl ?? null, input.notes ?? null, input.createdByUserId],
+      `INSERT INTO design_systems (id, workspace_id, name) VALUES ($1,$2,$3)`,
+      [id, input.workspaceId, input.name],
     );
     return (await this.getById(id)) as DesignSystemRecord;
   }
@@ -71,15 +65,20 @@ export class DesignSystemStore {
   }
 
   private toRecord(r: Record<string, unknown>): DesignSystemRecord {
+    const rawTokens = r['tokens'];
+    let tokens: DesignTokens | undefined;
+    if (rawTokens && typeof rawTokens === 'object' && Object.keys(rawTokens).length > 0) {
+      tokens = rawTokens as DesignTokens;
+    } else if (typeof rawTokens === 'string' && rawTokens !== '{}') {
+      tokens = JSON.parse(rawTokens) as DesignTokens;
+    }
     return {
       id: r['id'] as string,
       workspaceId: r['workspace_id'] as string,
       name: r['name'] as string,
-      brandUrl: (r['brand_url'] as string | null) ?? undefined,
-      notes: (r['notes'] as string | null) ?? undefined,
-      tokens: r['tokens'] ? JSON.parse(r['tokens'] as string) as DesignTokens : undefined,
+      tokens,
+      isDefault: (r['is_default'] as boolean | null) ?? false,
       version: r['version'] as number,
-      createdByUserId: r['created_by'] as string,
       createdAt: new Date(r['created_at'] as string),
       updatedAt: new Date(r['updated_at'] as string),
     };
