@@ -1,5 +1,5 @@
 {
-  "name": "@stackby/prompts",
+  "name": "@stackby/telemetry",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -15,17 +15,20 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "lint": "eslint src --ext .ts",
-    "clean": "rm -rf dist",
-    "eval": "tsx eval/runner.ts",
-    "eval:ci": "tsx eval/runner.ts --ci",
-    "eval:update-baseline": "tsx eval/runner.ts --update-baseline"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@stackby/schema-types": "workspace:*"
+    "@opentelemetry/api": "^1.7.0",
+    "@opentelemetry/sdk-node": "^0.48.0",
+    "@opentelemetry/sdk-trace-base": "^1.21.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.48.0",
+    "@opentelemetry/resources": "^1.21.0",
+    "@opentelemetry/semantic-conventions": "^1.21.0",
+    "undici": "^6.17.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
-    "tsx": "^4.9.0",
+    "@types/node": "^20.0.0",
     "typescript": "*",
     "vitest": "^1.5.0"
   }

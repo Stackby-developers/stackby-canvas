@@ -1,0 +1,14 @@
+{
+  "version": "2026-09-02T00:00:00.000Z",
+  "scores": {
+    "total": 200,
+    "buildSuccessRate": 1.0,
+    "bindingFidelityAvg": 1.0,
+    "visualQualityAvg": 4.0,
+    "planCoverageAvg": 0.9,
+    "typecheckCleanRate": 1.0,
+    "lintCleanRate": 1.0,
+    "injectionPassRate": 1.0
+  },
+  "recordedAt": "2026-09-02T00:00:00.000Z"
+}

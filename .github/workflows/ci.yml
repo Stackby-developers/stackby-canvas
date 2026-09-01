@@ -62,3 +62,9 @@ jobs:
 
       - name: Build
         run: pnpm turbo run build
+
+      - name: Eval harness (regression gate)
+        run: pnpm --filter @stackby/prompts eval:ci
+        env:
+          EVAL_MOCK_VISION: "true"
+          EVAL_MOCK_A11Y: "true"

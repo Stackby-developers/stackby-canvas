@@ -1,0 +1,32 @@
+{
+  "stackId": "stk_crm_fixture",
+  "stackName": "CRM",
+  "tables": [
+    {
+      "id": "tbl_contacts",
+      "name": "Contacts",
+      "primaryColumnId": "col_contact_name",
+      "columns": [
+        { "id": "col_contact_name", "name": "Name", "type": "text" },
+        { "id": "col_email", "name": "Email", "type": "email" },
+        { "id": "col_phone", "name": "Phone", "type": "phone" },
+        { "id": "col_company", "name": "Company", "type": "text" },
+        { "id": "col_industry", "name": "Industry", "type": "select", "options": { "choices": [{"id":"i1","name":"Tech"},{"id":"i2","name":"Finance"},{"id":"i3","name":"Health"}] } },
+        { "id": "col_rating", "name": "Rating", "type": "rating" },
+        { "id": "col_website", "name": "Website", "type": "url" }
+      ]
+    },
+    {
+      "id": "tbl_deals",
+      "name": "Deals",
+      "primaryColumnId": "col_deal_name",
+      "columns": [
+        { "id": "col_deal_name", "name": "Name", "type": "text" },
+        { "id": "col_stage", "name": "Stage", "type": "select", "options": { "choices": [{"id":"s1","name":"Lead"},{"id":"s2","name":"Qualified"},{"id":"s3","name":"Closed Won"}] } },
+        { "id": "col_value", "name": "Value", "type": "currency" },
+        { "id": "col_budget", "name": "Budget", "type": "number" },
+        { "id": "col_contact_link", "name": "Contact", "type": "link", "options": { "linkedTableId": "tbl_contacts" } }
+      ]
+    }
+  ]
+}

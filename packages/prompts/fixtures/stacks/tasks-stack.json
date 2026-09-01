@@ -1,0 +1,39 @@
+{
+  "stackId": "stk_tasks_fixture",
+  "stackName": "Task Management",
+  "tables": [
+    {
+      "id": "tbl_tasks",
+      "name": "Tasks",
+      "primaryColumnId": "col_name",
+      "columns": [
+        { "id": "col_name", "name": "Name", "type": "text" },
+        { "id": "col_status", "name": "Status", "type": "select", "options": { "choices": [{"id":"c1","name":"Todo"},{"id":"c2","name":"In Progress"},{"id":"c3","name":"Done"}] } },
+        { "id": "col_due", "name": "DueDate", "type": "date" },
+        { "id": "col_assignee", "name": "Assignee", "type": "collaborator" },
+        { "id": "col_tags", "name": "Tags", "type": "multiSelect", "options": { "choices": [{"id":"t1","name":"Frontend"},{"id":"t2","name":"Backend"}] } },
+        { "id": "col_desc", "name": "Description", "type": "multilineText" },
+        { "id": "col_attach", "name": "Attachments", "type": "multipleAttachment" },
+        { "id": "col_completed", "name": "Completed", "type": "checkbox" },
+        { "id": "col_hours", "name": "EstimatedHours", "type": "number" },
+        { "id": "col_progress", "name": "Progress", "type": "progress" },
+        { "id": "col_timespent", "name": "TimeSpent", "type": "duration" },
+        { "id": "col_completion", "name": "Completion", "type": "percent" },
+        { "id": "col_cost", "name": "TotalCost", "type": "formula" },
+        { "id": "col_taskcount", "name": "TaskCount", "type": "rollup" },
+        { "id": "col_ticket", "name": "TicketId", "type": "autoNumber" },
+        { "id": "col_created", "name": "CreatedTime", "type": "createdTime" },
+        { "id": "col_project", "name": "ProjectId", "type": "link", "options": { "linkedTableId": "tbl_projects" } }
+      ]
+    },
+    {
+      "id": "tbl_projects",
+      "name": "Projects",
+      "primaryColumnId": "col_proj_name",
+      "columns": [
+        { "id": "col_proj_name", "name": "Name", "type": "text" },
+        { "id": "col_proj_status", "name": "Status", "type": "select", "options": { "choices": [{"id":"p1","name":"Active"},{"id":"p2","name":"Completed"}] } }
+      ]
+    }
+  ]
+}

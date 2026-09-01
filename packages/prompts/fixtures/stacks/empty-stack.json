@@ -1,0 +1,14 @@
+{
+  "stackId": "stk_empty_fixture",
+  "stackName": "Empty Stack",
+  "tables": [
+    {
+      "id": "tbl_empty",
+      "name": "Items",
+      "primaryColumnId": "col_name",
+      "columns": [
+        { "id": "col_name", "name": "Name", "type": "text" }
+      ]
+    }
+  ]
+}

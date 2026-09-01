@@ -1,0 +1,19 @@
+{
+  "stackId": "stk_huge_fixture",
+  "stackName": "Large Dataset",
+  "tables": [
+    {
+      "id": "tbl_huge",
+      "name": "Records",
+      "primaryColumnId": "col_huge_name",
+      "columns": [
+        { "id": "col_huge_name", "name": "Name", "type": "text" },
+        { "id": "col_huge_status", "name": "Status", "type": "select", "options": { "choices": [{"id":"h1","name":"Active"},{"id":"h2","name":"Archived"}] } },
+        { "id": "col_huge_barcode", "name": "Barcode", "type": "barcode" },
+        { "id": "col_huge_autonumber", "name": "TicketId", "type": "autoNumber" },
+        { "id": "col_huge_formula", "name": "TotalCost", "type": "formula" }
+      ],
+      "rowCount": 1000
+    }
+  ]
+}
