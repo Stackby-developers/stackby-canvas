@@ -39,6 +39,14 @@ export class DesignSystemStore {
     return rows[0] ? this.toRecord(rows[0]) : null;
   }
 
+  async listByWorkspace(workspaceId: string): Promise<DesignSystemRecord[]> {
+    const { rows } = await this.pool.query(
+      `SELECT * FROM design_systems WHERE workspace_id=$1 ORDER BY updated_at DESC`,
+      [workspaceId],
+    );
+    return rows.map((r) => this.toRecord(r));
+  }
+
   async updateTokens(id: string, tokens: DesignTokens): Promise<void> {
     await this.pool.query(
       `UPDATE design_systems SET tokens=$1, version=version+1, updated_at=NOW() WHERE id=$2`,

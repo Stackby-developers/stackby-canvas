@@ -13,6 +13,7 @@ import { registerVersionsRoute } from './routes/versions.js';
 import { registerDependentsRoute } from './routes/dependents.js';
 import { registerEventsRoute } from './routes/events-route.js';
 import { registerCancelRoute } from './routes/cancel.js';
+import { registerListRoute } from './routes/list.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.NODE_ENV === 'test' ? 'silent' : 'info' } });
@@ -34,6 +35,7 @@ registerVersionsRoute(app, pool);
 registerDependentsRoute(app, pool);
 registerEventsRoute(app, redis);
 registerCancelRoute(app);
+registerListRoute(app, pool);
 
 const start = async () => {
   await redis.connect();
