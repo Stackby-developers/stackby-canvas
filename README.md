@@ -105,7 +105,8 @@ These are never violated:
 - [x] **`packages/schema-types`** — Zod schemas + inferred TS types for all service contracts
 - [x] **`packages/sdk`** — `@stackby/studio-sdk` 0.1.0 — 12 hooks, Filter DSL, standalone client, `createTestClient()`, DataInspector, `eslint-plugin-stackby-studio` · 70 tests · <28KB gzipped
 - [ ] **`packages/ui`** — Shared Radix UI component library
-- [x] **`packages/prompts`** — B.0–B.13 agent prompt library (14 prompts, 13 builders, 208 tests) + cache-optimised assembly (`buildPrompt()`, `AGENTS`, 8 instructions) · `PROMPT_VERSION = "1.5.0"` · eval harness pending
+- [x] **`packages/prompts`** — B.0–B.13 library + eval harness: 200+ golden cases, 20 injection fixtures, 7-dimension scorer, regression gate (`pnpm eval:ci`), 8 versioned prompt files · 285 tests
+- [x] **`packages/telemetry`** — OTel `withSpan()`, 19 span names, ClickHouse writer + schema (run_steps/credit_events/artifact_views + materialized view), weekly triage query
 
 ### Infrastructure
 

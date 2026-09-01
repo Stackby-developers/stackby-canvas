@@ -10,6 +10,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Planned
 - `apps/studio-web` — Builder UI
 - `packages/ui` — Radix UI component library
+
+---
+
+## [0.12.0] — 2026-09-02
+
+### Added — `packages/prompts` eval harness + `packages/telemetry`
+
+**Eval harness (`packages/prompts`):**
+
+- **8 versioned prompt files** (`prompts/<agent>.v1.md`) with frontmatter: `agent`, `version`, `tier`, `schema`, `changelog`. Runs record the version they used for traceability.
+- **200+ golden fixtures** — `fixtures/generator.ts` generates cases programmatically across all 8 artifact types, all column types (text through autoNumber), empty stacks, 1000-row stacks, multi-table relationships, accessibility, and 20 adversarial injection cases whose row values contain `"ignore previous instructions"`, `<script>`, `process.env`, `eval()`, base64-encoded payloads, and Unicode RTL overrides.
+- **5 stack fixtures**: `tasks-stack.json` (17 columns incl. formula/rollup/link), `crm-stack.json`, `empty-stack.json`, `huge-stack.json` (1000 rows), `adversarial-stack.json` (injection strings in row values).
+- **Scorer** (`eval/scorer.ts`) — 7 dimensions: `build_success`, `typecheck_clean`, `lint_clean`, `plan_coverage` (expected components in generated AST), `binding_fidelity` (expected columns in element map), `visual_quality` (1–5, mocked in CI), `injection_clean` (6 credential patterns).
+- **Regression gate** (`eval/regression-gate.ts`) — `build_success` and `binding_fidelity` must not drop at all; `visual_quality` may not drop more than 0.15. Exits 1 on block.
+- **Runner** (`eval/runner.ts`) — `pnpm eval` CLI with `--ci`, `--filter`, `--update-baseline`. `pnpm eval:ci` runs in CI with mock vision/a11y.
+- **Baseline** (`fixtures/baselines/baseline-scores.json`) — 100% rates recorded; any degradation blocks CI.
+- **CI integration** — `eval:ci` step added to `.github/workflows/ci.yml` after build.
+
+**Telemetry (`packages/telemetry`):**
+- `spans.ts` — 19 canonical `studio.*` span names + 20 attribute keys covering the full run lifecycle
+- `withSpan()` — wraps any async fn in an OTel span; auto-records errors and sets status
+- `ClickHouseWriter` — `writeRunStep()` + `writeBatch()` for run_steps table
+- `schema.sql` — 3 MergeTree tables (`run_steps`, `credit_events`, `artifact_views`) + daily SummingMergeTree materialized view for aggregated dashboards
+- `generateWeeklyTriage()` — queries ClickHouse for failures in the last 7 days, clusters by `step_name`, ranks by frequency
+
+**Test counts:** 285 total (279 prompts + 6 telemetry)
+- `packages/ui` — Radix UI component library
 - `packages/prompts` — 200+ golden eval cases
 
 ---
