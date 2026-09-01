@@ -1,0 +1,42 @@
+{
+  "version": "1",
+  "packages": [
+    "react",
+    "react-dom",
+    "@types/react",
+    "@types/react-dom",
+    "@tanstack/react-query",
+    "@stackby/studio-sdk",
+    "@radix-ui/react-slot",
+    "@radix-ui/react-dialog",
+    "@radix-ui/react-dropdown-menu",
+    "@radix-ui/react-select",
+    "@radix-ui/react-tabs",
+    "@radix-ui/react-tooltip",
+    "@radix-ui/react-popover",
+    "@radix-ui/react-checkbox",
+    "@radix-ui/react-switch",
+    "@radix-ui/react-avatar",
+    "@radix-ui/react-badge",
+    "@radix-ui/react-separator",
+    "@radix-ui/react-label",
+    "tailwindcss",
+    "autoprefixer",
+    "postcss",
+    "zod",
+    "lucide-react",
+    "recharts",
+    "date-fns",
+    "clsx",
+    "tailwind-merge",
+    "class-variance-authority",
+    "react-markdown",
+    "react-hook-form",
+    "vite",
+    "@vitejs/plugin-react",
+    "typescript"
+  ],
+  "scopeWildcards": [
+    "@radix-ui/"
+  ]
+}
