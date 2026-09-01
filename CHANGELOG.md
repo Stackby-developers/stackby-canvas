@@ -8,7 +8,39 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Planned
-- `services/git` — GitHub/GitLab export and bidirectional sync
+- `apps/api` — Full BFF routes
+- `apps/studio-web` — Builder UI
+- `packages/ui` — Radix UI component library
+- `packages/prompts` — 200+ golden eval cases
+
+---
+
+## [0.10.0] — 2026-09-02
+
+### Added — `services/git` (C.10 GitHub/GitLab Integration)
+
+GitHub App and GitLab OAuth integration for artifact export and bidirectional sync.
+
+**Security:**
+- Installation tokens stored with AES-256-GCM envelope encryption. Per-record random IV + salt derived from a 32-byte master key. Token plaintext never appears in logs or responses.
+- Secret scanner runs on every file before any network call. Blocks pushes containing 10 key patterns (GitHub PAT, AWS AKIA, Stripe `sk_live_`, OpenAI `sk-`, Anthropic, private keys, generic bearer tokens, Google API keys, Stackby PAT with non-placeholder value). Returns file + line + redacted snippet — never the actual secret value.
+
+**Export to new repository:**
+- Creates repo in chosen org/group with chosen visibility
+- Pushes full standalone project: `README.md`, `.gitignore`, `LICENSE`, `.env.example` (empty placeholders only), `stackby.config.json` (stack ID + table IDs, no credentials), `.github/workflows/ci.yml` (install → typecheck → lint → build), `stackby-proxy.ts` (local PAT proxy), `vite.config.ts`
+- Exported project runs standalone: `pnpm install && pnpm dev` against live Stackby API with a PAT — no Studio hosting dependency
+
+**Export to existing repository:**
+- Creates a branch from the chosen base, commits the project, opens a PR/MR with generated title and body
+- Read-back sync check: if the remote branch has commits Studio did not make, raises `SYNC_DIVERGED` with the diff — never overwrites silently
+
+**Generated README sections:** artifact description, architecture diagram, data-binding table (component → table → columns → filter), environment variables, local dev steps, deployment (Vercel / Netlify), pinned `@stackby/studio-sdk` version.
+
+**Continuous push:** `POST /git/push/:linkId` scans files, pushes to the tracked branch, updates last-pushed SHA.
+
+**GitLab adapter:** interface-compliant stub with full production wiring notes (scopes, token refresh, project/MR API differences, self-hosted URL).
+
+**Files:** 28 files changed · **46/46 tests passing**
 - `apps/api` — Full BFF routes
 - `apps/studio-web` — Builder UI
 - `packages/ui` — Radix UI component library

@@ -93,7 +93,7 @@ These are never violated:
 - [x] **`services/publish`** — Publish and runtime service (C.8) — immutable content-addressed deployments, SSO PKCE, 5 visibility modes, strict CSP, loading state, deep links, rollback/unpublish · 46 tests
 - [ ] **`services/publish`** — Deployments, routing, custom domains (C.8)
 - [x] **`services/design`** — Design system extraction (C.9) — computed-styles-only, LAB clustering, WCAG contrast, tokens.css + tailwind.preset.js, SSE streaming, cancellable · 47 tests
-- [ ] **`services/git`** — GitHub/GitLab export + sync
+- [x] **`services/git`** — GitHub/GitLab integration (C.10) — GitHub App JWT, AES-256-GCM token storage, secret scanner, export to new/existing repo, standalone project, read-back sync · 46 tests
 
 ### API & frontend
 
