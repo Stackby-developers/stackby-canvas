@@ -97,7 +97,7 @@ These are never violated:
 
 ### API & frontend
 
-- [ ] **`apps/api`** — BFF: project, run, artifact, credits, admin CRUD routes
+- [x] **`apps/api`** — Governance, credits and admin API (C.11) — append-only ledger, monthly cap with resume-capable error, hash-chained audit log, 5 admin endpoints · 23 tests
 - [ ] **`apps/studio-web`** — Builder UI: Home, Projects, Builder Shell, Plan Review, Preview Host, Visual Edit, Publish, Design Systems, Templates, Admin Console
 
 ### Packages

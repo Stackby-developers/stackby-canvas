@@ -8,7 +8,51 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Planned
-- `apps/api` — Full BFF routes
+- `apps/studio-web` — Builder UI
+- `packages/ui` — Radix UI component library
+- `packages/prompts` — 200+ golden eval cases
+
+---
+
+## [0.11.0] — 2026-09-02
+
+### Added — `apps/api` (C.11 Governance, Credits and Admin API)
+
+BFF governance layer: credit metering, monthly cap enforcement with resume-capable errors, hash-chained audit log, and the full admin console API.
+
+**Credit ledger:**
+- Append-only Postgres ledger with `debit()` and `credit()` operations; atomically updates `workspaces.credit_balance` in the same transaction
+- `getBalance()` returns `{ totalCredits, usedCredits, balance, monthUsed }` — all derived from the ledger, never from a mutable field
+- `GET /v1/credits/balance`, `GET /v1/credits/history`, `POST /v1/credits/preview`, `POST /v1/credits/debit`
+
+**Credit pricer** (T0–T3 rates with configurable multiplier):
+| Tier | In (credits/MT) | Out (credits/MT) | Cache read |
+|------|----------------|------------------|-----------|
+| T0 nano | 1 | 5 | 0.1 |
+| T1/T2 | 15 | 75 | 1.5 |
+| T3 vision | 75 | 375 | 7.5 |
+Plus 5 credits flat per sandbox build, 2 credits flat per preview set.
+
+**`CreditCapError` — resume-capable typed error:**
+- `userMessage` names the cap, the run ID, and that the generation is *paused* (not terminated)
+- `resumeInstructions` points to Workspace Settings → Credits and references the Temporal `workflowId` so the run can resume without restarting
+- `retryable: false`, `httpStatus: 402`
+- Workspace at cap **can still** view and publish existing artifacts — `checkCanRun` only gates new generation
+
+**Hash-chained audit log:**
+- Every entry computes `SHA-256(previousHash || canonicalJSON(entry))` — tampering at any position breaks all downstream hashes
+- `verifyChain(workspaceId)` walks the full history and returns `{ valid: boolean, brokenAt?: entryId }`
+- `exportCsv()` and `exportJson()` (JSONL) for compliance export
+- Genesis constant: `000...0` (64 zeros)
+
+**Admin console API:**
+- `GET /v1/admin/artifacts` — id, type, state, visibility, credits30d, dataScope
+- `POST /v1/admin/artifacts/:id/force-unpublish` — delegates to publish service; audits the action
+- `GET /v1/admin/audit` — filterable by actor/action/resource/date; format=json|csv|jsonl
+- `PATCH /v1/admin/policy` — allowPublicPublishing, allowGitExport, allowedModelTiers, monthlyCreditCap, requireApprovalForPublish
+- `GET /v1/admin/usage` — credits by user/project/day with period filter
+
+**Files:** 21 files changed · **23/23 tests passing**
 - `apps/studio-web` — Builder UI
 - `packages/ui` — Radix UI component library
 - `packages/prompts` — 200+ golden eval cases
