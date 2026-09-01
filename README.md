@@ -92,7 +92,7 @@ These are never violated:
 - [x] **`services/build`** — Sandboxed build service (C.7) — allowlist, tsc, eslint, vite, Playwright screenshots, DOM element map, incremental cache · 32 tests
 - [x] **`services/publish`** — Publish and runtime service (C.8) — immutable content-addressed deployments, SSO PKCE, 5 visibility modes, strict CSP, loading state, deep links, rollback/unpublish · 46 tests
 - [ ] **`services/publish`** — Deployments, routing, custom domains (C.8)
-- [ ] **`services/design`** — Design system extraction (C.9)
+- [x] **`services/design`** — Design system extraction (C.9) — computed-styles-only, LAB clustering, WCAG contrast, tokens.css + tailwind.preset.js, SSE streaming, cancellable · 47 tests
 - [ ] **`services/git`** — GitHub/GitLab export + sync
 
 ### API & frontend

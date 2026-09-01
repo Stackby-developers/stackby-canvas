@@ -8,7 +8,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Planned
-- `services/design` — Design system extraction (C.9)
+- `services/git` — GitHub/GitLab export and bidirectional sync
+- `apps/api` — Full BFF routes
+- `apps/studio-web` — Builder UI
+- `packages/ui` — Radix UI component library
+- `packages/prompts` — 200+ golden eval cases
+
+---
+
+## [0.9.0] — 2026-09-02
+
+### Added — `services/design` (C.9 Design System Extraction)
+
+Design system extraction from brand URLs, uploaded references, and free-text notes.
+
+**Core invariant — computed styles only:** The `DOM_EXTRACTION_SCRIPT` injected into the browser reads exclusively `window.getComputedStyle(el).color`, `.backgroundColor`, etc. It never calls `getPropertyValue()`, never reads `document.styleSheets`, never touches `--*` custom properties. Declared-but-unused CSS variables are structurally invisible to the extractor. This is enforced at two levels: (1) the script itself and (2) a `dom-script.test.ts` that asserts on the source string so it can never silently regress.
+
+**Color clustering** (`extractor/color-cluster.ts`): sRGB → CIEXYZ → CIELAB. Samples within ΔLAB < 12 are merged (weighted by rendered pixel area). Each role — `background`, `surface`, `bodyText`, `headingText`, `link`, `buttonBg`, `buttonText`, `border`, `accent` — produces one representative hex color. `parseSamples` filters near-transparent values (a < 0.1) before clustering.
+
+**Font extraction** (`extractor/font-extractor.ts`): walks rendered text nodes; groups by (family, role); weights by total pixel area; returns `defaultSize` and `defaultWeight` from the most-rendered combination per group.
+
+**Outputs:**
+- `DesignTokens` object with contrast warnings + accessible substitutes (hue-preserving HSL lightness adjustment)
+- `tokens.css` — concrete `:root { --color-* }` properties (no `var()` references in values)
+- `tailwind.preset.js` — references `var(--color-*)` so the Tailwind config couples to the token layer
+
+**Other features:** SSE streaming extraction progress via Redis Streams; cancellable via `AbortController` map; page crawler stub (same pattern as Firecracker stub — documents Playwright wiring); sharing with `view`/`edit` roles (per-user + workspace-wide); version history with dependent project tracking; asset add/remove triggering optional re-extraction.
+
+**Files:** 34 files changed · **47/47 tests passing**
 - `services/git` — GitHub/GitLab export and bidirectional sync
 - `apps/api` — Full BFF routes
 - `apps/studio-web` — Builder UI
