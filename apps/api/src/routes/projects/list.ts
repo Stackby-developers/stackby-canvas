@@ -7,7 +7,9 @@ interface ProjectRow {
   stack_id: string;
   status: string;
   created_at: Date;
+  updated_at: Date;
   latest_run_status: string | null;
+  artifact_type: string | null;
 }
 
 export function registerListProjectsRoute(app: FastifyInstance, pool: Pool): void {
@@ -21,11 +23,16 @@ export function registerListProjectsRoute(app: FastifyInstance, pool: Pool): voi
          p.stack_id,
          p.status,
          p.created_at,
-         r.status AS latest_run_status
+         p.updated_at,
+         r.status AS latest_run_status,
+         a.type   AS artifact_type
        FROM projects p
        LEFT JOIN LATERAL (
          SELECT status FROM runs WHERE project_id = p.id ORDER BY started_at DESC LIMIT 1
        ) r ON true
+       LEFT JOIN LATERAL (
+         SELECT type FROM artifacts WHERE project_id = p.id ORDER BY created_at DESC LIMIT 1
+       ) a ON true
        WHERE p.workspace_id = $1
        ORDER BY p.updated_at DESC
        LIMIT 50`,
@@ -39,7 +46,9 @@ export function registerListProjectsRoute(app: FastifyInstance, pool: Pool): voi
         stackId: row.stack_id,
         status: row.status,
         createdAt: row.created_at,
+        updatedAt: row.updated_at,
         latestRunStatus: row.latest_run_status,
+        artifactType: row.artifact_type,
       })),
     });
   });
