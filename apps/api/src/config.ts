@@ -6,6 +6,7 @@ export const ConfigSchema = z.object({
   REDIS_URL: z.string().default('redis://localhost:6379'),
   JWT_SECRET: z.string().min(32).default('dev-secret-minimum-32-chars-long!!'),
   PUBLISH_SERVICE_URL: z.string().url().default('http://localhost:3006'),
+  ORCHESTRATOR_URL: z.string().url().default('http://localhost:3004'),
   CREDIT_MULTIPLIER: z.coerce.number().default(1.5),
   DEFAULT_MONTHLY_CAP: z.coerce.number().int().default(500),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

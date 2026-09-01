@@ -11,6 +11,8 @@ import { registerForceUnpublishRoute } from './routes/admin/force-unpublish.js';
 import { registerAuditRoute } from './routes/admin/audit-route.js';
 import { registerPolicyRoute } from './routes/admin/policy.js';
 import { registerUsageRoute } from './routes/admin/usage.js';
+import { registerCreateProjectRoute } from './routes/projects/create.js';
+import { registerListProjectsRoute } from './routes/projects/list.js';
 
 const config = loadConfig();
 const pool = new pg.Pool({ connectionString: config.DATABASE_URL });
@@ -33,6 +35,8 @@ registerForceUnpublishRoute(app, pool, config);
 registerAuditRoute(app, pool);
 registerPolicyRoute(app, pool, config);
 registerUsageRoute(app, pool);
+registerCreateProjectRoute(app, pool, config);
+registerListProjectsRoute(app, pool);
 
 const start = async () => {
   await app.listen({ port: config.PORT, host: '0.0.0.0' });

@@ -5,6 +5,7 @@ import { setupActivityDeps, createWorker } from './worker.js';
 import { createTemporalClient } from './client.js';
 import { registerSseRoute } from './routes/sse.js';
 import { registerSignalRoute } from './routes/signal.js';
+import { registerRunRoute } from './routes/run.js';
 
 const config = loadConfig();
 
@@ -24,6 +25,7 @@ const start = async () => {
 
   const temporalClient = await createTemporalClient(config);
   registerSignalRoute(app, temporalClient);
+  registerRunRoute(app, temporalClient, config);
 
   const worker = await createWorker(config);
   void worker.run();
