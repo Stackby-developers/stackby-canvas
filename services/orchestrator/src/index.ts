@@ -8,6 +8,7 @@ import { registerSignalRoute } from './routes/signal.js';
 import { registerRunRoute } from './routes/run.js';
 import { registerVisualEditRoute } from './routes/visual-edit.js';
 import { registerAnnotationsRoute } from './routes/annotations.js';
+import { registerTemplateRemapRoute } from './routes/template-remap.js';
 
 const config = loadConfig();
 
@@ -18,6 +19,7 @@ app.get('/health', () => ({ status: 'ok', service: 'orchestrator-service' }));
 app.get('/ready', async () => { await redis.ping(); return { status: 'ready', service: 'orchestrator-service' }; });
 
 registerSseRoute(app, redis);
+registerTemplateRemapRoute(app);
 
 export const TEMPORAL_TASK_QUEUE = config.TEMPORAL_TASK_QUEUE;
 
