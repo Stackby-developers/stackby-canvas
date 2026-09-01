@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Zap } from 'lucide-react';
-import { Dialog, DialogContent, Button } from '@stackby/ui';
+import { LayoutDashboard, Pencil } from 'lucide-react';
+import { Dialog, DialogContent } from '@stackby/ui';
 import { useOnboarding } from '@/src/hooks/use-onboarding';
 
 export function OnboardingModal() {
@@ -13,32 +13,55 @@ export function OnboardingModal() {
     router.push('/');
   }
 
+  if (!show) return null;
+
   return (
-    <Dialog open={show} onOpenChange={(open) => { if (!open) dismiss(); }}>
-      <DialogContent className="max-w-sm text-center" aria-describedby="onboarding-desc">
-        <div className="flex flex-col items-center gap-5 py-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/15">
-            <Zap className="h-6 w-6 text-accent" />
+    <Dialog open={show} onOpenChange={(o) => { if (!o) dismiss(); }}>
+      <DialogContent className="max-w-2xl p-0 overflow-hidden gap-0">
+        <div className="flex h-[440px]">
+          {/* Left: blue grid */}
+          <div className="relative w-[240px] shrink-0 overflow-hidden bg-gradient-to-br from-sky-400 to-sky-700">
+            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <div key={i} className="border border-sky-300/30" />
+              ))}
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <h2 className="text-lg font-semibold tracking-tight text-text">
-              Welcome to Stackby Studio
-            </h2>
-          </div>
+          {/* Right: content */}
+          <div className="flex flex-1 flex-col justify-between p-8">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-text">
+                  <span className="text-[10px] font-bold text-bg">S</span>
+                </div>
+                <span className="text-sm font-semibold text-text-muted">Studio</span>
+              </div>
 
-          <div id="onboarding-desc" className="space-y-3 text-sm text-text-muted">
-            <p>
-              Describe what you need — get a real React app connected to your Stackby data in under 4 minutes.
-            </p>
-            <p>
-              The code is yours: export to GitHub, publish to a custom URL, or embed anywhere.
-            </p>
-          </div>
+              <h2 className="text-2xl font-bold tracking-tight text-text">Meet Studio</h2>
 
-          <Button className="w-full" onClick={handleStart}>
-            Start building →
-          </Button>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <LayoutDashboard className="mt-0.5 h-5 w-5 shrink-0 text-text-muted" />
+                  <p className="text-sm text-text">Build custom apps from your Stackby data.</p>
+                </div>
+                <div className="h-px bg-border" />
+                <div className="flex items-start gap-3">
+                  <Pencil className="mt-0.5 h-5 w-5 shrink-0 text-text-muted" />
+                  <p className="text-sm text-text">
+                    Start with a prompt, refine in chat, and publish for people who can access the connected stack.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleStart}
+              className="w-full rounded-full bg-text py-3 text-sm font-semibold text-bg hover:opacity-80 transition-opacity"
+            >
+              Start building →
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

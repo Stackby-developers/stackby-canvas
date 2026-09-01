@@ -2,91 +2,111 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
-import { Button, Input, Tabs, TabsList, TabsTrigger, TabsContent } from '@stackby/ui';
-import type { Project, ProjectStatus } from '@/src/lib/types';
+import { Plus, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Input } from '@stackby/ui';
+import type { Project, ArtifactType } from '@/src/lib/types';
 import { ProjectCard } from './project-card';
 import { EmptyState } from './empty-state';
 
-type FilterTab = 'all' | ProjectStatus;
+type CanvasTab = 'all' | 'starred' | 'published' | 'apps' | 'presentations' | 'reports';
 
 interface ProjectsListProps {
   initialProjects: Project[];
 }
 
+const APP_TYPES: ArtifactType[] = ['dashboard', 'portal', 'gallery', 'form'];
+
 export function ProjectsList({ initialProjects }: ProjectsListProps) {
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [activeTab, setActiveTab] = useState<CanvasTab>('all');
 
-  const counts: Record<FilterTab, number> = {
-    all: initialProjects.length,
-    draft: initialProjects.filter((p) => p.status === 'draft').length,
-    published: initialProjects.filter((p) => p.status === 'published').length,
-    archived: initialProjects.filter((p) => p.status === 'archived').length,
-  };
+  function filterByTab(p: Project): boolean {
+    switch (activeTab) {
+      case 'all': return true;
+      case 'starred': return false; // placeholder
+      case 'published': return p.status === 'published';
+      case 'apps': return p.artifactType !== null && APP_TYPES.includes(p.artifactType);
+      case 'presentations': return p.artifactType === 'presentation';
+      case 'reports': return p.artifactType === 'report';
+    }
+  }
 
   const visible = initialProjects
-    .filter((p) => activeTab === 'all' || p.status === activeTab)
+    .filter(filterByTab)
     .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
 
-  const tabs: { value: FilterTab; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'draft', label: 'Draft' },
-    { value: 'published', label: 'Published' },
-    { value: 'archived', label: 'Archived' },
+  const tabs: { value: CanvasTab; label: string }[] = [
+    { value: 'all',           label: 'All' },
+    { value: 'starred',       label: 'Starred' },
+    { value: 'published',     label: 'Published' },
+    { value: 'apps',          label: 'Apps' },
+    { value: 'presentations', label: 'Presentations' },
+    { value: 'reports',       label: 'Reports' },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold text-text">Projects</h1>
-        <div className="flex items-center gap-3">
-          <Input
-            placeholder="Search projects…"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); }}
-            className="max-w-xs"
-          />
-          <Button size="sm" asChild>
-            <Link href="/">
-              <Plus className="mr-1.5 h-4 w-4" />
-              New project
-            </Link>
-          </Button>
+    <div className="px-8 py-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <button className="flex items-center gap-1 text-2xl font-semibold text-text hover:text-text-muted transition-colors">
+          Projects <ChevronDown className="h-5 w-5 mt-0.5" />
+        </button>
+        <div className="flex items-center gap-2">
+          <button className="rounded-lg border border-border bg-bg px-3.5 py-1.5 text-sm font-medium text-text hover:bg-bg-muted transition-colors">
+            Select projects
+          </button>
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 rounded-lg bg-text px-3.5 py-1.5 text-sm font-medium text-bg hover:opacity-80 transition-opacity"
+          >
+            <Plus className="h-4 w-4" /> Create new
+          </Link>
         </div>
       </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => { setActiveTab(v as FilterTab); }}
-      >
-        <TabsList>
+      {/* Tabs + filter row */}
+      <div className="flex items-center justify-between border-b border-border mb-6">
+        <div className="flex">
           {tabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`px-1 pb-3 mr-5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                activeTab === tab.value
+                  ? 'border-text text-text'
+                  : 'border-transparent text-text-muted hover:text-text'
+              }`}
+            >
               {tab.label}
-              {counts[tab.value] > 0 && (
-                <span className="ml-1.5 tabular-nums text-text-faint">
-                  {counts[tab.value]}
-                </span>
-              )}
-            </TabsTrigger>
+            </button>
           ))}
-        </TabsList>
+        </div>
+        <div className="flex items-center gap-2 pb-3">
+          <Input
+            placeholder="Search…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-7 text-xs w-40"
+          />
+          <button className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-text-muted border border-border hover:bg-bg-muted transition-colors">
+            <SlidersHorizontal className="h-3 w-3" /> Filter by base <ChevronDown className="h-3 w-3" />
+          </button>
+          <button className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-text-muted border border-border hover:bg-bg-muted transition-colors">
+            Sort: Newest <ChevronDown className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
 
-        {tabs.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value} className="mt-6">
-            {visible.length === 0 ? (
-              <EmptyState filter={tab.value} />
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {visible.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
+      {/* Grid */}
+      {visible.length === 0 ? (
+        <EmptyState filter={activeTab === 'published' ? 'published' : activeTab === 'all' ? 'all' : 'draft'} />
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {visible.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
