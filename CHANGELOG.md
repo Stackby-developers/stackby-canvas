@@ -8,7 +8,65 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Planned
-- `services/build` — Firecracker/gVisor sandboxed build service (C.7)
+- `services/design` — Design system extraction (C.9)
+- `services/git` — GitHub/GitLab export and bidirectional sync
+- `apps/api` — Full BFF routes
+- `apps/studio-web` — Builder UI
+- `packages/ui` — Radix UI component library
+- `packages/prompts` — 200+ golden eval cases
+
+---
+
+## [0.8.0] — 2026-09-02
+
+### Added — `services/publish` (C.8 Publish and Runtime Service)
+
+Immutable, content-addressed deployment service with Stackby SSO auth and strict security posture.
+
+**Deployments:** `computeContentAddress(artifactId, versionId, buildHash)` → SHA-256 content address. Each publish creates a new immutable version; rollback creates a new deployment pointing to a prior version's files — no in-place mutation.
+
+**Routing:** `{slug}.studio.stackby.com` default; custom domain with CNAME verification; Redis-cached slug → deployment lookups (60s TTL, invalidated on unpublish); ACME/Let's Encrypt stub with full production wiring notes.
+
+**Auth (Stackby SSO):** PKCE OAuth 2.0 flow (`generatePKCE` → `buildAuthUrl` → `exchangeCode`). Session stored as HttpOnly / Secure / SameSite=Lax JWT cookie. Runtime JWT issued per-viewer, scoped to `permissionScopeHash` — never broader than the viewer's own Stackby permissions. Expired tokens fail verification.
+
+**Visibility modes:**
+| Mode | Who can see it |
+|------|---------------|
+| `stack_collaborators` | Authenticated Stackby stack collaborators only |
+| `workspace` | Anyone in the workspace (workspace ID match) |
+| `link` | Anyone with the URL |
+| `password` | Anyone with the correct password (SHA-256 hash check) |
+| `public` | Completely public, no auth required |
+
+Publishing to `link` or `public` requires a `PublishConfirmation` payload enumerating tables/columns becoming readable — stored in the audit log.
+
+**CSP (strict):** `script-src 'self'`; `connect-src 'self' {gatewayOrigin}` — no third-party egress from a published artifact. `frame-ancestors 'none'`. Per-artifact `Permissions-Policy` declares only what the artifact actually needs (camera, clipboard-read, clipboard-write, geolocation — all default-off).
+
+**Loading state:** Single CSS spinner with `aria-hidden`; empty title tag; no visible text — zero flash of unstyled content (FR-8.5). Runtime script injected as `type="module"` with the viewer's runtime token.
+
+**Deep links:** `GET /r/:table/:recordId` → redirect to artifact with params; runtime navigates to detail view.
+
+**Operations:** `POST /publish/:id/rollback` + `POST /publish/:id/unpublish` + `POST /admin/force-unpublish`. Unpublish invalidates Redis cache and sets a tombstone key; propagation within 60s.
+
+**Files:** 33 files changed · **46/46 tests passing**
+
+---
+
+## [0.7.0] — 2026-09-02
+
+### Added — `services/build` (C.7 Sandboxed Build Service)
+
+Pipeline: allowlist check → `tsc --noEmit` → ESLint → Vite build → Playwright screenshots (375/768/1440px) → DOM element map. All errors are structured `BuildError` objects with `{ phase, file, line, column, code, message, severity }`. Incremental builds diff file hashes and only re-transpile changed files. Sandbox abstraction: `ProcessSandbox` for dev/test, `FirecrackerSandbox` stub with production wiring notes (rootfs image, jailer, cgroup v2, egress firewall). Warm pool via `p-limit`. Element map extracts `data-inspect-id` bounding boxes to power Visual Edit click-to-select.
+
+**Files:** 29 new files · **32/32 tests passing**
+
+---
+
+## [0.6.1] — 2026-09-02
+
+### Added — B.0–B.13 Agent Prompt Library + expanded `packages/schema-types`
+
+14 full agent prompt definitions in `docs/agent-prompts/`, 13 typed zod output schemas added to `packages/schema-types` (intent, clarifier, planner, codegen output, visual verifier, fixer, etc.). `packages/prompts` expanded to `PROMPT_VERSION = "1.5.0"` with 14 `build*Messages` functions and 208 tests. Every agent output schema enforces structural invariants at parse time.
 - `services/publish` — Deployment, routing, custom domains (C.8)
 - `services/design` — Design system extraction (C.9)
 - `services/git` — GitHub/GitLab export and bidirectional sync
