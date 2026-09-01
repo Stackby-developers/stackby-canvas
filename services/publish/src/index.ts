@@ -10,6 +10,7 @@ import { registerServeRoute } from './routes/serve-route.js';
 import { registerAuthCallbackRoute } from './routes/auth-callback.js';
 import { registerDeepLinkRoute } from './routes/deep-link.js';
 import { registerAdminRoute } from './routes/admin-route.js';
+import { registerVersionsRoute } from './routes/versions-route.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.NODE_ENV === 'test' ? 'silent' : 'info' } });
@@ -28,6 +29,7 @@ registerServeRoute(app, pool, redis, config);
 registerAuthCallbackRoute(app, redis, config);
 registerDeepLinkRoute(app);
 registerAdminRoute(app, pool, redis);
+registerVersionsRoute(app, pool);
 
 const start = async () => {
   await redis.connect();
