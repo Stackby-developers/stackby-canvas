@@ -1,9 +1,16 @@
-export default function BuilderShellPage({ params }: { params: { id: string } }) {
+import { BuilderShell } from '@/src/components/builder/builder-shell';
+
+export default function BuilderShellPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: { runId?: string };
+}) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-2">
-      <p className="text-sm font-medium text-text">Builder Shell</p>
-      <p className="text-xs text-text-muted">Project {params.id}</p>
-      <p className="text-xs text-text-faint">Coming in Phase 4</p>
-    </div>
+    <BuilderShell
+      projectId={params.id}
+      runId={searchParams['runId'] ?? null}
+    />
   );
 }
