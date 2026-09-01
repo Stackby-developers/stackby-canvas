@@ -1,22 +1,25 @@
 import Fastify from 'fastify';
+import { Redis } from 'ioredis';
+import pg from 'pg';
+import { loadConfig } from './config.js';
 
-const SERVICE = 'git-service';
-const PORT = parseInt(process.env['PORT'] ?? '3007', 10);
+const config = loadConfig();
+const app = Fastify({ logger: { level: config.NODE_ENV === 'test' ? 'silent' : 'info' } });
+const redis = new Redis(config.REDIS_URL, { lazyConnect: true });
+const pool = new pg.Pool({ connectionString: config.DATABASE_URL });
 
-const app = Fastify({ logger: true });
-
-app.get('/health', () => ({ status: 'ok', service: SERVICE }));
-app.get('/ready', () => ({ status: 'ready', service: SERVICE }));
+app.get('/health', () => ({ status: 'ok', service: 'git-service' }));
+app.get('/ready', async () => { await redis.ping(); return { status: 'ready', service: 'git-service' }; });
 
 const start = async () => {
-  try {
-    await app.listen({ port: PORT, host: '0.0.0.0' });
-  } catch (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+  await redis.connect();
+  await app.listen({ port: config.PORT, host: '0.0.0.0' });
 };
 
-void start();
+process.on('SIGTERM', async () => { await app.close(); await redis.quit(); await pool.end(); });
+process.on('SIGINT', async () => { await app.close(); await redis.quit(); await pool.end(); });
 
+if (config.NODE_ENV !== 'test') void start();
+
+export { app, config };
 export default app;
