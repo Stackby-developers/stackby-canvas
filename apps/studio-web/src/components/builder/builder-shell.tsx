@@ -4,13 +4,14 @@ import { useRunEvents } from '@/src/hooks/use-run-events';
 import { RunFeed } from './run-feed';
 import { PreviewHost } from './preview-host';
 import { FollowUpBar } from './follow-up-bar';
+import { PropertiesRail } from './properties-rail';
 
 interface BuilderShellProps {
   projectId: string;
   runId: string | null;
 }
 
-export function BuilderShell({ projectId: _projectId, runId }: BuilderShellProps) {
+export function BuilderShell({ projectId, runId }: BuilderShellProps) {
   const { events, phase, sendSignal } = useRunEvents(runId);
 
   function handleFollowUp(prompt: string) {
@@ -35,10 +36,13 @@ export function BuilderShell({ projectId: _projectId, runId }: BuilderShellProps
           <PreviewHost events={events} phase={phase} />
         </div>
 
-        {/* Properties rail — right (Phase 5) */}
-        <div className="w-80 shrink-0 border-l border-border bg-bg-elevated flex items-center justify-center">
-          <p className="text-xs text-text-faint">Visual Edit — Phase 5</p>
-        </div>
+        {/* Properties rail — right */}
+        <PropertiesRail
+          projectId={projectId}
+          runId={runId}
+          events={events}
+          phase={phase}
+        />
       </div>
 
       <FollowUpBar phase={phase} onSubmit={handleFollowUp} />

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Card, Badge } from '@stackby/ui';
 
 const TEMPLATES = [
@@ -11,17 +12,12 @@ const TEMPLATES = [
   { id: 'status-report', name: 'Status Report', type: 'report', icon: '📄', description: 'Weekly snapshot for stakeholders' },
 ] as const;
 
-type Template = (typeof TEMPLATES)[number];
-
-interface TemplateStripProps {
-  onSelect: (t: Template) => void;
-}
-
-export function TemplateStrip({ onSelect }: TemplateStripProps) {
+export function TemplateStrip() {
+  const router = useRouter();
   return (
     <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
       {TEMPLATES.map((t) => (
-        <button key={t.id} type="button" onClick={() => onSelect(t)} className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 rounded-lg">
+        <button key={t.id} type="button" onClick={() => router.push(`/templates?id=${t.id}`)} className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 rounded-lg">
           <Card className="flex w-44 flex-col gap-2 p-3 text-left transition-colors hover:border-border hover:bg-bg-muted cursor-pointer">
             <span className="text-xl leading-none" role="img" aria-hidden="true">{t.icon}</span>
             <div className="space-y-1">

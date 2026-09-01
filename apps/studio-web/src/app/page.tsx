@@ -42,7 +42,7 @@ export default async function HomePage() {
           <h2 className="text-xs font-semibold uppercase tracking-widest text-text-faint">
             Quick start
           </h2>
-          <TemplateStrip onSelect={() => undefined} />
+          <TemplateStrip />
         </div>
       </div>
     </div>
