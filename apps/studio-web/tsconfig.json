@@ -13,9 +13,10 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@stackby/ui": ["../../packages/ui/src/index.ts"],
+      "@stackby/schema-types": ["../../packages/schema-types/src/index.ts"],
+      "@stackby/studio-sdk": ["../../packages/sdk/src/index.ts"]
     },
     "allowJs": true,
     "noEmit": true,

@@ -14,7 +14,9 @@
   "dependencies": {
     "@stackby/schema-types": "workspace:*",
     "@stackby/ui": "workspace:*",
+    "lucide-react": "^0.395.0",
     "next": "14.2.0",
+    "next-themes": "^0.3.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },
@@ -22,6 +24,9 @@
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
     "typescript": "*",
     "vitest": "^1.5.0"
   }
