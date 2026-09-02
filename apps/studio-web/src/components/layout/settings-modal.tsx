@@ -10,17 +10,29 @@ interface SettingsModalProps {
 type Tab = 'general' | 'account';
 
 const MODELS = [
-  { id: 'opus46', label: 'Opus 4.6' },
-  { id: 'opus45', label: 'Opus 4.5' },
-  { id: 'sonnet45', label: 'Sonnet 4.5' },
-  { id: 'haiku45', label: 'Haiku 4.5' },
+  { id: 'opus46',   label: 'Opus 4.6',   tier: 'T3', description: 'Most capable — best for complex apps' },
+  { id: 'opus45',   label: 'Opus 4.5',   tier: 'T3', description: 'Previous Opus — reliable and thorough' },
+  { id: 'sonnet45', label: 'Sonnet 4.5', tier: 'T2', description: 'Balanced speed and quality' },
+  { id: 'haiku45',  label: 'Haiku 4.5',  tier: 'T0', description: 'Fastest — good for simple apps' },
 ];
 
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [tab, setTab] = useState<Tab>('general');
-  const [model, setModel] = useState('opus46');
+  const [model, setModel] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('studio_model_pref') ?? 'opus46';
+    }
+    return 'opus46';
+  });
   const [skipPlanning, setSkipPlanning] = useState(false);
   const [sounds, setSounds] = useState(true);
+
+  function handleModelChange(id: string) {
+    setModel(id);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('studio_model_pref', id);
+    }
+  }
 
   if (!open) return null;
 
@@ -31,7 +43,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
       onClick={(e) => { if (e.target === e.currentTarget) onOpenChange(false); }}
     >
       <div
-        className="relative flex h-[480px] w-[560px] overflow-hidden rounded-[14px] border border-border"
+        className="relative flex h-[520px] w-[580px] overflow-hidden rounded-[14px] border border-border"
         style={{ background: '#1C1C1C', boxShadow: '0 12px 32px rgba(0,0,0,.5)' }}
       >
         {/* Left nav */}
@@ -62,19 +74,30 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             <>
               <h2 className="text-[16px] font-semibold text-text">General</h2>
 
-              <div className="space-y-3">
-                <p className="text-[15px] font-medium text-text">Model</p>
+              <div className="space-y-1">
+                <p className="text-[15px] font-medium text-text mb-3">Model</p>
                 {MODELS.map((m) => (
-                  <label key={m.id} className="flex cursor-pointer items-center gap-3">
+                  <label key={m.id} className="flex cursor-pointer items-center gap-3 py-1.5 rounded-[8px] px-2 hover:bg-hover transition-colors duration-150">
                     <input
                       type="radio"
                       name="model"
                       value={m.id}
                       checked={model === m.id}
-                      onChange={() => setModel(m.id)}
-                      className="h-4 w-4 accent-accent"
+                      onChange={() => handleModelChange(m.id)}
+                      className="h-4 w-4 accent-accent mt-0.5 shrink-0"
                     />
-                    <span className="text-[15px] text-text">{m.label}</span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[15px] text-text">{m.label}</span>
+                        <span
+                          className="rounded px-1.5 py-0.5 text-[11px] font-medium"
+                          style={{ background: 'hsl(var(--color-bg-muted))', color: 'hsl(var(--color-text-muted))' }}
+                        >
+                          {m.tier}
+                        </span>
+                      </div>
+                      <p className="text-[13px] text-text-faint">{m.description}</p>
+                    </div>
                   </label>
                 ))}
               </div>

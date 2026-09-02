@@ -35,6 +35,11 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
     setSubmitting(true);
     setError(null);
     try {
+      const modelPref = typeof window !== 'undefined' ? (localStorage.getItem('studio_model_pref') ?? 'opus46') : 'opus46';
+      const modelTierMap: Record<string, string> = {
+        opus46: 'T3', opus45: 'T3', sonnet45: 'T2', haiku45: 'T0',
+      };
+      const modelTier = modelTierMap[modelPref] ?? 'T2';
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,6 +50,7 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
           stackId,
           artifactType,
           prompt,
+          modelTier,
         }),
       });
       if (!res.ok) throw new Error(`Request failed (${res.status.toString()})`);

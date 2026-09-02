@@ -14,6 +14,7 @@ const RunBodySchema = z.object({
     'website', 'document', 'presentation',
   ]),
   designSystemId: z.string().uuid().optional(),
+  modelTier: z.enum(['T0', 'T1', 'T2', 'T3']).optional(),
 });
 
 export function registerRunRoute(

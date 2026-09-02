@@ -4,6 +4,41 @@
 
 @layer base {
   :root {
+    /* Light mode (default) */
+    --color-bg: 0 0% 100%;
+    --color-bg-elevated: 0 0% 99%;
+    --color-bg-muted: 220 14% 96%;
+    --color-hover: 220 14% 93%;
+    --color-input: 220 14% 96%;
+    --color-border: 220 13% 91%;
+    --color-border-strong: 220 13% 85%;
+    --color-border-active: 220 13% 78%;
+    --color-border-bright: 220 13% 65%;
+    --color-text: 221 39% 11%;
+    --color-text-secondary: 221 20% 20%;
+    --color-text-muted: 220 9% 46%;
+    --color-text-faint: 220 9% 62%;
+    --color-accent: 216 94% 57%;
+    --color-accent-hover: 216 94% 50%;
+    --color-accent-fg: 0 0% 100%;
+    --color-success: 142 71% 45%;
+    --color-warning: 38 92% 50%;
+    --color-destructive: 0 84% 60%;
+    --color-destructive-fg: 0 0% 100%;
+    --color-badge-bg: 207 26% 90%;
+    --color-badge-text: 197 75% 35%;
+    --color-step-bg: 0 0% 97%;
+
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.625rem;
+    --radius-xl: 0.875rem;
+
+    --font-sans: var(--font-display), -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  .dark {
     --color-bg: 0 0% 11%;
     --color-bg-elevated: 0 0% 13%;
     --color-bg-muted: 0 0% 16%;
@@ -27,18 +62,6 @@
     --color-badge-bg: 207 26% 16%;
     --color-badge-text: 197 75% 61%;
     --color-step-bg: 0 0% 12%;
-
-    --radius-sm: 0.375rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.625rem;
-    --radius-xl: 0.875rem;
-
-    --font-sans: var(--font-display), -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  }
-
-  .dark {
-    /* same values — always dark */
   }
 
   * {
