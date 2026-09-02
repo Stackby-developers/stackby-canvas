@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { HelpCircle } from 'lucide-react';
-import { Input, Tooltip, TooltipContent, TooltipTrigger, cn } from '@stackby/ui';
 
 interface StackPickerProps {
   value: string;
@@ -26,45 +24,42 @@ export function StackPicker({ value, onChange, recentStacks = [] }: StackPickerP
 
   return (
     <div ref={containerRef} className="relative flex-1 min-w-0">
-      <div className="flex items-center gap-1.5">
-        <label className="shrink-0 text-xs font-medium text-text-muted">Stack ID</label>
-        <Tooltip delayDuration={200}>
-          <TooltipTrigger asChild>
-            <HelpCircle className="h-3.5 w-3.5 cursor-help text-text-faint" />
-          </TooltipTrigger>
-          <TooltipContent side="top">Paste your Stackby base ID</TooltipContent>
-        </Tooltip>
-      </div>
-      <Input
-        className="mt-1 font-mono text-xs"
-        placeholder="sty_xxxxxxxx"
+      <input
+        placeholder="Select a base"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => { if (recentStacks.length > 0) setOpen(true); }}
         autoComplete="off"
         spellCheck={false}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
+          fontSize: '15px',
+          color: value ? '#EDEDED' : '#6B6B6B',
+          width: '100%',
+          fontFamily: 'inherit',
+        }}
       />
       {open && recentStacks.length > 0 && (
-        <ul className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-border bg-bg-elevated shadow-lg">
-          <li className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-text-faint">
-            Recent
-          </li>
+        <ul
+          className="absolute left-0 right-0 z-20 overflow-hidden"
+          style={{ top: 'calc(100% + 8px)', background: '#1E1E1E', border: '1px solid #333', borderRadius: '10px', boxShadow: '0 12px 32px rgba(0,0,0,.5)', padding: '6px' }}
+        >
+          <li style={{ padding: '7px 10px 5px', fontSize: '13px', color: '#8A8A8A' }}>Recent</li>
           {recentStacks.map((s) => (
             <li key={s.id}>
               <button
                 type="button"
-                className={cn(
-                  'flex w-full flex-col px-3 py-2 text-left transition-colors hover:bg-bg-muted',
-                  value === s.id && 'bg-accent/10',
-                )}
+                style={{ display: 'flex', flexDirection: 'column', width: '100%', padding: '8px 10px', borderRadius: '8px', textAlign: 'left', background: value === s.id ? '#282828' : 'transparent', cursor: 'pointer' }}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   onChange(s.id);
                   setOpen(false);
                 }}
               >
-                <span className="text-xs font-medium text-text">{s.name}</span>
-                <span className="font-mono text-[10px] text-text-faint">{s.id}</span>
+                <span style={{ fontSize: '15px', color: '#EDEDED' }}>{s.name}</span>
+                <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#8A8A8A' }}>{s.id}</span>
               </button>
             </li>
           ))}

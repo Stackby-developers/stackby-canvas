@@ -1,113 +1,67 @@
 'use client';
 
-import {
-  Sparkles,
-  Database,
-  HelpCircle,
-  ClipboardList,
-  CheckCircle2,
-  Code2,
-  Hammer,
-  ScanEye,
-  Wrench,
-  Rocket,
-  AlertCircle,
-} from 'lucide-react';
-import { Progress } from '@stackby/ui';
+import { useState } from 'react';
+import { Check, ChevronRight } from 'lucide-react';
 import type { RunEvent } from '@/src/hooks/use-run-events';
 
-type LucideIcon = React.ComponentType<{ className?: string | undefined }>;
-
-const EVENT_CONFIG: Record<string, { icon: LucideIcon; label: string }> = {
-  intent: { icon: Sparkles, label: 'Intent analyzed' },
-  schema_analyzed: { icon: Database, label: 'Schema analyzed' },
-  clarification: { icon: HelpCircle, label: 'Clarification needed' },
-  plan: { icon: ClipboardList, label: 'Plan ready' },
-  plan_approved: { icon: CheckCircle2, label: 'Plan approved' },
-  codegen: { icon: Code2, label: 'Generating code' },
-  build_progress: { icon: Hammer, label: 'Building' },
-  verify: { icon: ScanEye, label: 'Verifying' },
-  fix: { icon: Wrench, label: 'Fixing' },
-  ready: { icon: Rocket, label: 'Ready' },
-  error: { icon: AlertCircle, label: 'Error' },
+const STEP_LABELS: Record<string, string> = {
+  intent: 'Analyzing intent',
+  schema_analyzed: 'Schema analyzed',
+  clarification: 'Clarification needed',
+  plan: 'Plan ready',
+  plan_approved: 'Plan approved',
+  codegen: 'Generating code',
+  build_progress: 'Building',
+  verify: 'Verifying',
+  fix: 'Fixing',
+  ready: 'Built',
+  error: 'Error',
 };
 
-function formatTs(ts: number): string {
-  return new Date(ts).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-}
-
-function EventDetail({ event }: { event: RunEvent }) {
+function StepDetail({ event }: { event: RunEvent }) {
   switch (event.type) {
-    case 'intent': {
-      const intent = event.data['intent'];
-      return typeof intent === 'string' ? (
-        <p className="text-xs text-text-muted">{intent}</p>
-      ) : null;
-    }
-    case 'schema_analyzed': {
-      const t = event.data['tableCount'];
-      const c = event.data['columnCount'];
-      return (
-        <p className="text-xs text-text-muted">
-          {typeof t === 'number' ? t : '?'} tables · {typeof c === 'number' ? c : '?'} columns
-        </p>
-      );
-    }
     case 'build_progress': {
       const progress = typeof event.data['progress'] === 'number' ? event.data['progress'] : 0;
       return (
-        <div className="mt-1 flex items-center gap-2">
-          <Progress value={progress} className="h-1 flex-1" />
-          <span className="text-xs tabular-nums text-text-faint">{progress}%</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+          <div style={{ flex: 1, height: '3px', background: '#2E2E2E', borderRadius: '999px', overflow: 'hidden' }}>
+            <div style={{ width: `${progress}%`, height: '100%', background: '#2D7FF9', transition: 'width 300ms' }} />
+          </div>
+          <span style={{ fontSize: '12px', color: '#8A8A8A', fontVariantNumeric: 'tabular-nums' }}>{progress}%</span>
         </div>
       );
-    }
-    case 'codegen': {
-      const step = event.data['step'];
-      return typeof step === 'string' ? (
-        <p className="text-xs text-text-muted font-mono">{step}</p>
-      ) : null;
     }
     case 'verify': {
       const pass = event.data['pass'];
       const issues = event.data['issues'];
       return (
-        <div className="space-y-1">
-          <p className={`text-xs font-medium ${pass ? 'text-success' : 'text-destructive'}`}>
+        <div style={{ marginTop: '4px' }}>
+          <p style={{ fontSize: '13px', color: pass ? '#3ECF8E' : '#ef4444' }}>
             {pass ? '✓ Passed' : '✗ Issues found'}
           </p>
-          {Array.isArray(issues) &&
-            issues.map((issue, i) => (
-              <p key={i} className="text-xs text-text-muted pl-3 border-l border-destructive/40">
-                {String(issue)}
-              </p>
-            ))}
+          {Array.isArray(issues) && issues.map((issue, i) => (
+            <p key={i} style={{ fontSize: '13px', color: '#8A8A8A', paddingLeft: '12px', borderLeft: '2px solid rgba(239,68,68,0.4)' }}>
+              {String(issue)}
+            </p>
+          ))}
         </div>
       );
     }
     case 'fix': {
-      const issue = event.data['issue'];
       const attempt = event.data['attempt'];
+      const issue = event.data['issue'];
       return (
-        <p className="text-xs text-text-muted">
+        <p style={{ fontSize: '13px', color: '#8A8A8A', marginTop: '2px' }}>
           Attempt {typeof attempt === 'number' ? attempt : '?'} — {typeof issue === 'string' ? issue : ''}
         </p>
       );
     }
-    case 'ready':
-      return <p className="text-xs font-medium text-success">Preview ready</p>;
     case 'error': {
       const code = event.data['code'];
       const message = event.data['message'];
       return (
-        <p className="text-xs text-destructive">
-          {typeof code === 'string' ? code : 'ERROR'}
-          {typeof message === 'string' ? ` — ${message}` : ''}
+        <p style={{ fontSize: '13px', color: '#ef4444', marginTop: '2px' }}>
+          {typeof code === 'string' ? code : 'ERROR'}{typeof message === 'string' ? ` — ${message}` : ''}
         </p>
       );
     }
@@ -122,27 +76,72 @@ interface RunCardProps {
 }
 
 export function RunCard({ event, isLatest }: RunCardProps) {
-  const config = EVENT_CONFIG[event.type] ?? { icon: Sparkles, label: event.type };
-  const Icon = config.icon;
+  const [expanded, setExpanded] = useState(false);
+  const label = STEP_LABELS[event.type] ?? event.type;
+  const hasDetail = ['build_progress', 'verify', 'fix', 'error'].includes(event.type);
+
+  if (event.type === 'ready') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* Built step row */}
+        <button
+          onClick={() => setExpanded((o) => !o)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            height: '48px', padding: '0 14px', borderRadius: '10px',
+            background: '#1F1F1F', border: '1px solid #2E2E2E',
+            fontSize: '16px', color: '#EDEDED', cursor: 'pointer', width: '100%',
+          }}
+        >
+          <Check strokeWidth={1.6} style={{ width: '18px', height: '18px', color: '#8A8A8A', flexShrink: 0 }} />
+          <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
+          <ChevronRight strokeWidth={1.6} style={{ width: '16px', height: '16px', color: '#8A8A8A', transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms' }} />
+        </button>
+        {/* Rating widget */}
+        <div style={{ alignSelf: 'center', display: 'flex', alignItems: 'center', gap: '10px', background: '#232323', borderRadius: '10px', padding: '9px 14px', fontSize: '14px', color: '#EDEDED' }}>
+          How was this result?
+          <span style={{ letterSpacing: '2px', color: '#6B6B6B' }}>★★★★★</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (event.type === 'intent' || event.type === 'schema_analyzed' || event.type === 'plan_approved') {
+    const detail = event.type === 'schema_analyzed'
+      ? `${typeof event.data['tableCount'] === 'number' ? event.data['tableCount'] : '?'} tables · ${typeof event.data['columnCount'] === 'number' ? event.data['columnCount'] : '?'} columns`
+      : event.type === 'intent' && typeof event.data['intent'] === 'string'
+        ? event.data['intent']
+        : null;
+    return (
+      <div style={{ padding: '4px 0' }}>
+        {detail && <p style={{ fontSize: '16px', lineHeight: 1.5, color: '#EDEDED' }}>{detail}</p>}
+      </div>
+    );
+  }
 
   return (
-    <div className="flex gap-3 py-2 px-3">
-      <div
-        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-          isLatest ? 'bg-accent/15 text-accent' : 'bg-bg-muted text-text-faint'
-        }`}
+    <div>
+      <button
+        onClick={() => hasDetail && setExpanded((o) => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '10px',
+          height: '48px', padding: '0 14px', borderRadius: '10px',
+          background: '#1F1F1F', border: '1px solid #2E2E2E',
+          fontSize: '16px', color: isLatest ? '#EDEDED' : '#8A8A8A',
+          cursor: hasDetail ? 'pointer' : 'default', width: '100%',
+        }}
       >
-        <Icon className="h-3 w-3" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-xs font-medium text-text">{config.label}</p>
-          <span className="shrink-0 text-[10px] tabular-nums text-text-faint">
-            {formatTs(event.ts)}
-          </span>
+        <Check strokeWidth={1.6} style={{ width: '18px', height: '18px', color: '#8A8A8A', flexShrink: 0 }} />
+        <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
+        {hasDetail && (
+          <ChevronRight strokeWidth={1.6} style={{ width: '16px', height: '16px', color: '#8A8A8A', transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms' }} />
+        )}
+      </button>
+      {expanded && hasDetail && (
+        <div style={{ paddingLeft: '14px', paddingTop: '4px' }}>
+          <StepDetail event={event} />
         </div>
-        <EventDetail event={event} />
-      </div>
+      )}
     </div>
   );
 }

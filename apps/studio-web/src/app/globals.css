@@ -33,7 +33,7 @@
     --radius-lg: 0.625rem;
     --radius-xl: 0.875rem;
 
-    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-sans: var(--font-display), -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   }
 

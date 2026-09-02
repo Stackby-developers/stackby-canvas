@@ -51,7 +51,7 @@ export function ProjectsList({ initialProjects }: ProjectsListProps) {
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         <div className="flex items-center gap-1">
           <h1 className="text-[26px] font-semibold text-text">Projects</h1>
-          <ChevronDown strokeWidth={1.5} className="h-5 w-5 text-text-muted mt-1" />
+          <ChevronDown strokeWidth={1.6} className="h-5 w-5 text-text-muted mt-1" />
         </div>
         <div className="flex items-center gap-2">
           <button className="rounded-[8px] border border-border-active bg-surface px-3 py-2 text-[15px] text-text hover:bg-hover transition-colors duration-150">
@@ -61,7 +61,7 @@ export function ProjectsList({ initialProjects }: ProjectsListProps) {
             href="/"
             className="flex items-center gap-1 rounded-[8px] border border-border-bright bg-input px-3 py-2 text-[15px] text-text hover:bg-surface transition-colors duration-150"
           >
-            <Plus strokeWidth={1.5} className="h-4 w-4" /> Create new
+            <Plus strokeWidth={1.6} className="h-4 w-4" /> Create new
           </Link>
         </div>
       </div>
@@ -101,33 +101,30 @@ export function ProjectsList({ initialProjects }: ProjectsListProps) {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {visible.map((project) => (
               <Link key={project.id} href={`/projects/${project.id}`} className="block group">
-                <div className="rounded-[14px] border border-border-strong bg-surface p-2 transition-all duration-150 hover:-translate-y-px hover:border-border-bright">
-                  {/* Thumbnail */}
-                  <div className="mb-2 flex aspect-[16/10] items-center justify-center overflow-hidden rounded-[10px] bg-hover">
-                    <span className="text-5xl opacity-15">
+                {/* Card: thumbnail only inside border */}
+                <div style={{ background: '#282828', border: '1px solid #363636', borderRadius: '14px', padding: '8px', transition: 'border-color 150ms, transform 150ms' }} className="hover:-translate-y-px hover:border-[#4A4A4A]">
+                  <div className="flex aspect-[16/10] items-center justify-center overflow-hidden rounded-[10px]" style={{ background: '#f6f4ef' }}>
+                    <span className="text-5xl opacity-20">
                       {TYPE_EMOJI[project.artifactType ?? 'dashboard'] ?? '🖼️'}
                     </span>
                   </div>
-                  {/* Name row */}
-                  <div className="flex items-center justify-between px-0.5">
-                    <p className="truncate text-[15px] text-text">{project.name}</p>
-                    <button
-                      type="button"
-                      onClick={(e) => e.preventDefault()}
-                      className="ml-2 shrink-0 rounded-[6px] p-1 text-text-faint opacity-0 group-hover:opacity-100 hover:bg-hover hover:text-text-muted transition-all duration-150"
-                    >
-                      <MoreHorizontal strokeWidth={1.5} className="h-4 w-4" />
-                    </button>
-                  </div>
-                  {/* Meta row */}
-                  <div className="flex items-center justify-between px-0.5">
-                    <p className="text-[13px] text-text-faint">
-                      {project.artifactType ? (ARTIFACT_TYPE_LABEL[project.artifactType] ?? 'App') : 'App'} · {project.status}
-                    </p>
-                    <p className="text-[13px] text-text-faint">
-                      {project.updatedAt ? formatRelativeTime(typeof project.updatedAt === 'string' ? project.updatedAt : String(project.updatedAt)) : ''}
-                    </p>
-                  </div>
+                </div>
+                {/* Name + ··· below border */}
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: '9px', padding: '0 2px', gap: '4px' }}>
+                  <p style={{ flex: 1, fontSize: '15px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{project.name}</p>
+                  <button
+                    type="button"
+                    onClick={(e) => e.preventDefault()}
+                    style={{ flexShrink: 0, padding: '4px', borderRadius: '6px', color: '#8A8A8A', opacity: 0, transition: 'opacity 150ms' }}
+                    className="group-hover:opacity-100"
+                  >
+                    <MoreHorizontal strokeWidth={1.6} style={{ width: '16px', height: '16px' }} />
+                  </button>
+                </div>
+                {/* Meta row */}
+                <div style={{ display: 'flex', fontSize: '13px', color: '#8A8A8A', padding: '2px 2px 0' }}>
+                  <span>{project.artifactType ? (ARTIFACT_TYPE_LABEL[project.artifactType] ?? 'App') : 'App'} · {project.status}</span>
+                  <span style={{ marginLeft: 'auto' }}>{project.updatedAt ? formatRelativeTime(typeof project.updatedAt === 'string' ? project.updatedAt : String(project.updatedAt)) : ''}</span>
                 </div>
               </Link>
             ))}

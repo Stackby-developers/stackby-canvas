@@ -62,7 +62,7 @@ export function DesignSystemsList({ designSystems }: DesignSystemsListProps) {
                 : 'border-transparent text-text-faint hover:text-text-muted',
             ].join(' ')}
           >
-            {t === 'all' ? 'All design systems' : 'Recently updated'}
+            {t === 'all' ? 'All' : 'Shared'}
           </button>
         ))}
         <div className="flex-1" />

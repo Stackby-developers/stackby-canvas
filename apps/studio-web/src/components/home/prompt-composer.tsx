@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUp, Plus, LayoutTemplate, Palette, ChevronDown } from 'lucide-react';
+import { ArrowUp, Plus, LayoutTemplate, Palette, ChevronDown, Database } from 'lucide-react';
 import type { ArtifactType } from '@/src/lib/types';
 import { StackPicker } from './stack-picker';
 import { VoiceInputButton } from './voice-input-button';
@@ -28,6 +28,7 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
 
   const canSubmit = prompt.trim().length > 0 && stackId.trim().length > 0 && !submitting;
   const isReport = artifactType === 'report';
+  const hasText = prompt.trim().length > 0;
 
   async function handleSubmit() {
     if (!canSubmit) return;
@@ -57,10 +58,13 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
 
   return (
     <div>
-      <div
-        className="rounded-2xl border border-border bg-bg overflow-hidden"
-        style={{ boxShadow: '0 0 1px rgba(0,0,0,.48), 0 0 2px rgba(0,0,0,.64), 0 8px 24px rgba(0,0,0,.32)' }}
-      >
+      {/* Composer container */}
+      <div style={{
+        background: '#1C1C1C',
+        border: '1px solid #2E2E2E',
+        borderRadius: '16px',
+        boxShadow: '0 0 1px rgba(0,0,0,.48),0 0 2px rgba(0,0,0,.64),0 8px 24px rgba(0,0,0,.32)',
+      }}>
         {/* Textarea */}
         <textarea
           value={prompt}
@@ -69,43 +73,51 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
           placeholder={prompt.length === 0 ? typewriterText : ''}
           disabled={submitting}
           rows={3}
-          className="block w-full resize-none bg-transparent px-5 pt-5 pb-3 text-[15px] text-text placeholder:text-text-faint outline-none min-h-[72px]"
+          style={{
+            display: 'block',
+            width: '100%',
+            resize: 'none',
+            background: 'transparent',
+            padding: '20px 20px 0',
+            fontSize: '15px',
+            color: '#fff',
+            outline: 'none',
+            minHeight: '52px',
+            border: 'none',
+            fontFamily: 'inherit',
+          }}
+          className="placeholder:text-[#6B6B6B]"
         />
 
         {/* Attachment chips */}
         {files.length > 0 && (
-          <div className="px-4 pb-2 flex flex-wrap gap-1.5">
+          <div style={{ padding: '8px 16px 0', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {files.map((f, i) => (
               <div
                 key={i}
-                className="flex items-center gap-1 rounded-full border border-border-active bg-surface px-2.5 py-1 text-[13px] text-text-muted"
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', borderRadius: '999px', border: '1px solid #3A3A3A', background: '#282828', padding: '4px 10px', fontSize: '13px', color: '#EDEDED' }}
               >
-                <span className="truncate max-w-[120px]">{f.name}</span>
-                <button
-                  type="button"
-                  onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
-                  className="ml-1 text-text-faint hover:text-text-muted transition-colors"
-                >
-                  ×
-                </button>
+                <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                <button type="button" onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))} style={{ color: '#8A8A8A', marginLeft: '4px' }}>×</button>
               </div>
             ))}
           </div>
         )}
 
         {/* Control row */}
-        <div className="flex items-center gap-1 px-3 pb-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px 16px' }}>
+          {/* + button */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-strong bg-surface text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150"
+            style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #363636', background: '#232323', display: 'grid', placeItems: 'center', flexShrink: 0, cursor: 'pointer' }}
           >
-            <Plus strokeWidth={1.5} className="h-4 w-4" />
+            <Plus strokeWidth={1.6} style={{ width: '16px', height: '16px', color: '#8A8A8A' }} />
           </button>
           <input
             ref={fileInputRef}
             type="file"
-            className="hidden"
+            style={{ display: 'none' }}
             multiple
             accept="image/*,.csv,.pdf"
             onChange={(e) => {
@@ -113,58 +125,84 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
             }}
           />
 
+          {/* Report chip */}
           <button
             type="button"
             onClick={() => setArtifactType(isReport ? 'dashboard' : 'report')}
-            className="flex h-9 items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3 text-[15px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              height: '36px', padding: '0 12px', borderRadius: '999px',
+              background: '#242424',
+              border: `1px solid ${isReport ? '#4A4A4A' : '#363636'}`,
+              fontSize: '15px', color: isReport ? '#fff' : '#EDEDED',
+              whiteSpace: 'nowrap', cursor: 'pointer',
+            }}
           >
-            <LayoutTemplate strokeWidth={1.5} className="h-3.5 w-3.5" />
-            {isReport ? 'Report' : 'App'}
-            <ChevronDown strokeWidth={1.5} className="h-3 w-3" />
+            <LayoutTemplate strokeWidth={1.6} style={{ width: '16px', height: '16px', flexShrink: 0 }} />
+            Report
+            <ChevronDown strokeWidth={1.6} style={{ width: '12px', height: '12px' }} />
           </button>
 
+          {/* Design system chip */}
           <button
             type="button"
-            className="flex h-9 items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3 text-[15px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              height: '36px', padding: '0 12px', borderRadius: '999px',
+              background: '#242424', border: '1px solid #363636',
+              fontSize: '15px', color: '#EDEDED',
+              whiteSpace: 'nowrap', cursor: 'pointer',
+            }}
           >
-            <Palette strokeWidth={1.5} className="h-3.5 w-3.5" />
+            <Palette strokeWidth={1.6} style={{ width: '16px', height: '16px', flexShrink: 0 }} />
             Design system
-            <ChevronDown strokeWidth={1.5} className="h-3 w-3" />
+            <ChevronDown strokeWidth={1.6} style={{ width: '12px', height: '12px' }} />
           </button>
 
-          <div className="flex-1" />
+          <div style={{ flex: 1 }} />
 
+          {/* Mic */}
           <VoiceInputButton
             onTranscript={(text) => setPrompt((prev) => (prev ? `${prev} ${text}` : text).slice(0, MAX_CHARS))}
             disabled={submitting}
           />
 
+          {/* Send */}
           <button
             type="button"
             onClick={() => void handleSubmit()}
             disabled={!canSubmit}
-            className={[
-              'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-150',
-              canSubmit ? 'bg-text text-bg hover:opacity-80' : 'bg-border-active text-text-faint',
-            ].join(' ')}
+            style={{
+              width: '36px', height: '36px', borderRadius: '50%',
+              background: hasText ? '#fff' : '#3A3A3A',
+              display: 'grid', placeItems: 'center', flexShrink: 0,
+              opacity: canSubmit ? 1 : 0.5, cursor: canSubmit ? 'pointer' : 'default',
+              border: 'none',
+            }}
           >
             {submitting
-              ? <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              : <ArrowUp strokeWidth={2} className="h-4 w-4" />}
+              ? <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: `2px solid ${hasText ? '#111' : '#8A8A8A'}`, borderTopColor: 'transparent', animation: 'spin 0.75s linear infinite' }} />
+              : <ArrowUp strokeWidth={2} style={{ width: '16px', height: '16px', color: hasText ? '#111' : '#8A8A8A' }} />}
           </button>
         </div>
 
-        {/* Base selector footer */}
-        <div className="flex items-center gap-2 border-t border-border px-4 py-2.5 bg-hover">
-          <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-border-active">
-            <span className="text-[8px] font-bold text-text-faint leading-none">S</span>
-          </div>
+        {/* Tray */}
+        <div style={{
+          background: '#232323',
+          borderTop: '1px solid #2E2E2E',
+          borderRadius: '0 0 16px 16px',
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}>
+          <Database strokeWidth={1.6} style={{ width: '16px', height: '16px', color: '#8A8A8A', flexShrink: 0 }} />
           <StackPicker value={stackId} onChange={setStackId} recentStacks={recentStacks} />
         </div>
       </div>
 
       {error !== null && (
-        <p className="mt-2 text-[13px] text-destructive">{error}</p>
+        <p style={{ marginTop: '8px', fontSize: '13px', color: 'hsl(var(--color-destructive))' }}>{error}</p>
       )}
     </div>
   );

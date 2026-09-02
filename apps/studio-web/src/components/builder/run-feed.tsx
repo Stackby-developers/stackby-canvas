@@ -22,33 +22,39 @@ export function RunFeed({ events, phase, sendSignal }: RunFeedProps) {
 
   if (phase === 'connecting' && events.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
         <Spinner size="md" />
-        <p className="text-xs text-text-muted">Connecting…</p>
+        <p style={{ fontSize: '13px', color: '#8A8A8A' }}>Connecting…</p>
       </div>
     );
   }
 
   if (phase === 'failed' && events.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-        <p className="text-xs font-medium text-destructive">Connection failed</p>
-        <p className="text-xs text-text-faint">
-          Check that the orchestrator service is running, then reload.
-        </p>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 16px', textAlign: 'center' }}>
+        <p style={{ fontSize: '13px', color: '#ef4444', fontWeight: 500 }}>Connection failed</p>
+        <p style={{ fontSize: '13px', color: '#8A8A8A' }}>Check that the orchestrator service is running, then reload.</p>
       </div>
     );
   }
 
+  const now = new Date();
+  const timestamp = `${now.getDate()} ${now.toLocaleString('en', { month: 'short' })}, ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto py-2">
-        <div className="divide-y divide-border/50">
+    <div style={{ display: 'flex', flex: 1, flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '6px 22px 0' }}>
+        {/* Timestamp separator */}
+        <p style={{ textAlign: 'center', fontSize: '13px', color: '#8A8A8A', marginTop: '6px', marginBottom: '16px' }}>{timestamp}</p>
+
+        {/* Event stream */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {events.map((event, i) => (
             <RunCard key={event.id} event={event} isLatest={i === events.length - 1} />
           ))}
         </div>
-        <div ref={bottomRef} />
+
+        <div ref={bottomRef} style={{ height: '16px' }} />
       </div>
 
       {phase === 'awaiting_clarification' && (

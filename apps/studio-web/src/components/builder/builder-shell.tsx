@@ -9,6 +9,7 @@ import { PreviewHost } from './preview-host';
 import { FollowUpBar } from './follow-up-bar';
 import { PropertiesRail } from './properties-rail';
 import { PublishPopover } from './publish-popover';
+import { Logo } from '@/src/components/layout/logo';
 
 interface PlanStep {
   id: string;
@@ -58,11 +59,8 @@ export function BuilderShell({ projectId, runId }: BuilderShellProps) {
         style={{ background: '#1C1C1C' }}
       >
         {/* Left */}
-        <Link
-          href="/"
-          className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[4px] bg-text"
-        >
-          <span className="text-[10px] font-bold text-bg leading-none">S</span>
+        <Link href="/" style={{ display: 'inline-flex', marginRight: '4px' }}>
+          <Logo size={22} />
         </Link>
 
         <button className="flex max-w-[200px] items-center gap-1 rounded-[8px] px-2 py-1 text-[16px] font-medium text-text hover:bg-surface transition-colors duration-150">
@@ -93,70 +91,75 @@ export function BuilderShell({ projectId, runId }: BuilderShellProps) {
 
         {/* Center: base pill */}
         <div className="flex flex-1 justify-center">
-          {stackId ? (
-            <div className="flex items-center gap-2 rounded-[10px] border border-border-active bg-hover px-3 py-1.5 text-[15px]">
-              <Database strokeWidth={1.5} className="h-3.5 w-3.5 text-success" />
-              <span className="max-w-[160px] truncate font-medium text-text">{stackId}</span>
-              <button className="text-text-muted hover:text-text transition-colors duration-150">
-                <RotateCcw strokeWidth={1.5} className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ) : null}
-        </div>
-
-        {/* Right */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-0.5 rounded-[8px] border border-border p-0.5">
-            <button
-              onClick={() => setView('preview')}
-              className={[
-                'flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-[15px] font-medium transition-colors duration-150',
-                view === 'preview' ? 'bg-surface text-text' : 'text-text-muted hover:text-text',
-              ].join(' ')}
-            >
-              <Monitor strokeWidth={1.5} className="h-3.5 w-3.5" />
-              Preview
-              <ChevronDown strokeWidth={1.5} className="h-3 w-3" />
-            </button>
-            <button
-              onClick={() => setView('code')}
-              className={[
-                'flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-[15px] font-medium transition-colors duration-150',
-                view === 'code' ? 'bg-surface text-text' : 'text-text-muted hover:text-text',
-              ].join(' ')}
-            >
-              <Code2 strokeWidth={1.5} className="h-3.5 w-3.5" />
-              Edit
-            </button>
-            <button className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-[15px] font-medium text-text-muted hover:text-text transition-colors duration-150">
-              <MessageSquare strokeWidth={1.5} className="h-3.5 w-3.5" />
-              Annotate
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', height: '40px', padding: '0 14px', borderRadius: '10px', background: '#232323', border: '1px solid #3A3A3A', fontSize: '15px' }}>
+            <Database strokeWidth={1.6} style={{ width: '16px', height: '16px', color: '#8A8A8A', flexShrink: 0 }} />
+            {/* Online dot */}
+            <span style={{ position: 'relative', display: 'inline-flex' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#3ECF8E', boxShadow: '0 0 0 2px #232323', display: 'inline-block' }} />
+            </span>
+            <span style={{ color: '#fff', fontSize: '15px', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {stackId || 'Select a base'}
+            </span>
+            <button style={{ color: '#8A8A8A', display: 'flex', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <RotateCcw strokeWidth={1.6} style={{ width: '14px', height: '14px' }} />
             </button>
           </div>
+        </div>
 
-          <PublishPopover
-            projectId={projectId}
-            runId={runId}
-            plan={plan}
-            isReady={phase === 'complete'}
-          />
+        {/* Right: mode buttons (individual, no outer group border) + Publish */}
+        <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {([
+              { id: 'preview', Icon: Monitor, label: 'Preview', extra: true },
+              { id: 'code', Icon: Code2, label: 'Edit', extra: false },
+              { id: 'annotate', Icon: MessageSquare, label: 'Annotate', extra: false },
+            ] as const).map(({ id, Icon, label, extra }) => (
+              <button
+                key={id}
+                onClick={() => setView(id === 'annotate' ? 'preview' : (id as BuilderView))}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  height: '38px', padding: '0 12px', borderRadius: '8px',
+                  fontSize: '15px',
+                  border: `1px solid ${view === id ? '#3A3A3A' : 'transparent'}`,
+                  background: view === id ? '#282828' : 'transparent',
+                  color: view === id ? '#fff' : '#EDEDED',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Icon strokeWidth={1.6} style={{ width: '16px', height: '16px' }} />
+                {label}
+                {extra && <ChevronDown strokeWidth={1.6} style={{ width: '12px', height: '12px' }} />}
+              </button>
+            ))}
+          </div>
+
+          {/* Publish button: white bg, black text */}
+          <div style={{ position: 'relative' }}>
+            <PublishPopover
+              projectId={projectId}
+              runId={runId}
+              plan={plan}
+              isReady={phase === 'complete'}
+            />
+          </div>
         </div>
       </header>
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: conversation */}
+        {/* Left: conversation — 500px per reference */}
         <div
-          className="flex w-[430px] shrink-0 flex-col overflow-hidden border-r border-border"
-          style={{ background: '#1C1C1C' }}
+          style={{ width: '500px', flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#1C1C1C' }}
         >
           <RunFeed events={events} phase={phase} sendSignal={sendSignal} />
           <FollowUpBar phase={phase} onSubmit={handleFollowUp} />
         </div>
 
-        {/* Center: preview */}
-        <div className="flex-1 overflow-hidden bg-bg-muted p-3">
-          <div className="h-full w-full overflow-hidden rounded-[12px] border border-border">
+        {/* Center: preview canvas — #241f1d warm dark, inset 0 12px 12px 0 */}
+        <div className="flex-1 overflow-hidden" style={{ padding: '0 12px 12px 0' }}>
+          <div style={{ height: '100%', border: '1px solid #2E2E2E', borderRadius: '12px', background: '#241f1d', overflow: 'hidden' }}>
             <PreviewHost events={events} phase={phase} />
           </div>
         </div>

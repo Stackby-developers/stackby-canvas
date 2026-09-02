@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { Mic, MicOff } from 'lucide-react';
-import { cn } from '@stackby/ui';
 
 declare global {
   interface Window {
@@ -75,23 +74,28 @@ export function VoiceInputButton({ onTranscript, disabled = false }: VoiceInputB
       onClick={toggle}
       disabled={isUnsupported || disabled}
       aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
-      className={cn(
-        'relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1',
-        isUnsupported || disabled
-          ? 'cursor-not-allowed text-text-faint opacity-40'
-          : isListening
-            ? 'bg-accent/15 text-accent'
-            : 'text-text-faint hover:bg-bg-muted hover:text-text-muted',
-      )}
+      style={{
+        position: 'relative',
+        width: '36px',
+        height: '36px',
+        borderRadius: '50%',
+        border: '1px solid #363636',
+        background: isListening ? 'rgba(45,127,249,0.15)' : '#232323',
+        display: 'grid',
+        placeItems: 'center',
+        flexShrink: 0,
+        cursor: isUnsupported || disabled ? 'not-allowed' : 'pointer',
+        opacity: isUnsupported || disabled ? 0.4 : 1,
+        color: isListening ? '#2D7FF9' : '#8A8A8A',
+      }}
     >
       {isListening && (
-        <span className="absolute inset-0 animate-ping rounded-full bg-accent/30" />
+        <span className="absolute inset-0 animate-ping rounded-full" style={{ background: 'rgba(45,127,249,0.3)' }} />
       )}
       {isUnsupported ? (
-        <MicOff className="h-3.5 w-3.5" />
+        <MicOff strokeWidth={1.6} style={{ width: '16px', height: '16px' }} />
       ) : (
-        <Mic className="h-3.5 w-3.5" />
+        <Mic strokeWidth={1.6} style={{ width: '16px', height: '16px' }} />
       )}
     </button>
   );

@@ -8,6 +8,7 @@ import {
   LogOut, ThumbsUp, Keyboard,
 } from 'lucide-react';
 import { SettingsModal } from './settings-modal';
+import { Logo } from './logo';
 
 const NAV = [
   { href: '/', icon: Home, label: 'Home' },
@@ -55,10 +56,8 @@ export function Sidebar() {
 
       <aside className="relative z-40 hidden md:flex h-full w-14 lg:w-[272px] shrink-0 flex-col overflow-visible">
         {/* Logo */}
-        <div className="flex h-10 items-center px-3 mt-1">
-          <div className="flex h-[22px] w-[22px] items-center justify-center rounded-[4px] bg-text shrink-0">
-            <span className="text-[10px] font-bold text-bg leading-none">S</span>
-          </div>
+        <div className="flex h-10 items-center px-[12px] mt-1">
+          <Logo size={26} />
         </div>
 
         {/* Primary nav */}
@@ -74,7 +73,7 @@ export function Sidebar() {
                   isActive ? 'bg-surface text-text' : 'text-text-secondary hover:bg-hover',
                 ].join(' ')}
               >
-                <item.icon strokeWidth={1.5} className="h-[18px] w-[18px] shrink-0" />
+                <item.icon strokeWidth={1.6} className="h-[18px] w-[18px] shrink-0" />
                 <span className="hidden lg:inline truncate">{item.label}</span>
               </Link>
             );
@@ -88,8 +87,8 @@ export function Sidebar() {
             className="flex w-full items-center gap-1 px-2 py-1 text-[13px] text-text-faint hover:text-text-muted transition-colors duration-150"
           >
             {recentOpen
-              ? <ChevronDown strokeWidth={1.5} className="h-3 w-3" />
-              : <ChevronRight strokeWidth={1.5} className="h-3 w-3" />}
+              ? <ChevronDown strokeWidth={1.6} className="h-3 w-3" />
+              : <ChevronRight strokeWidth={1.6} className="h-3 w-3" />}
             Recent
           </button>
           {recentOpen && (
@@ -120,10 +119,10 @@ export function Sidebar() {
               R
             </button>
             <button className="hidden lg:flex h-7 w-7 items-center justify-center rounded-[6px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150">
-              <Keyboard strokeWidth={1.5} className="h-4 w-4" />
+              <Keyboard strokeWidth={1.6} className="h-4 w-4" />
             </button>
             <button className="hidden lg:flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[15px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150">
-              <ThumbsUp strokeWidth={1.5} className="h-3.5 w-3.5" />
+              <ThumbsUp strokeWidth={1.6} className="h-3.5 w-3.5" />
               Share feedback
             </button>
           </div>
@@ -139,10 +138,10 @@ export function Sidebar() {
                   className="flex h-10 w-full items-center justify-between rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150"
                 >
                   <div className="flex items-center gap-[10px]">
-                    <Monitor strokeWidth={1.5} className="h-4 w-4 text-text-muted" />
+                    <Monitor strokeWidth={1.6} className="h-4 w-4 text-text-muted" />
                     Appearance
                   </div>
-                  <ChevronRight strokeWidth={1.5} className="h-3.5 w-3.5 text-text-faint" />
+                  <ChevronRight strokeWidth={1.6} className="h-3.5 w-3.5 text-text-faint" />
                 </button>
                 {appearanceOpen && (
                   <div
@@ -156,7 +155,7 @@ export function Sidebar() {
                         className="flex h-10 w-full items-center justify-between rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150"
                       >
                         <div className="flex items-center gap-[10px]">
-                          <Icon strokeWidth={1.5} className="h-4 w-4 text-text-muted" />
+                          <Icon strokeWidth={1.6} className="h-4 w-4 text-text-muted" />
                           {label}
                         </div>
                         {appearance === mode && <span className="text-accent text-xs">✓</span>}
@@ -176,7 +175,7 @@ export function Sidebar() {
               <div className="my-1 h-px bg-border" />
 
               <button className="flex h-10 w-full items-center gap-[10px] rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150">
-                <LogOut strokeWidth={1.5} className="h-4 w-4 text-text-muted" />
+                <LogOut strokeWidth={1.6} className="h-4 w-4 text-text-muted" />
                 Sign out
               </button>
             </div>

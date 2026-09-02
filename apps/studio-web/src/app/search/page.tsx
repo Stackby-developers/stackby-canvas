@@ -7,10 +7,9 @@ export default function SearchPage() {
   const [query, setQuery] = useState('');
 
   return (
-    <div className="flex h-full items-start justify-center pt-20 px-6">
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', zIndex: 50 }}>
       <div
-        className="w-full max-w-[890px] rounded-[14px] border border-border overflow-hidden"
-        style={{ background: '#1C1C1C', boxShadow: '0 12px 32px rgba(0,0,0,.5)' }}
+        style={{ width: '890px', maxWidth: 'calc(100vw - 48px)', height: '740px', maxHeight: 'calc(100vh - 48px)', background: '#1C1C1C', border: '1px solid #2E2E2E', borderRadius: '14px', boxShadow: '0 24px 64px rgba(0,0,0,.6)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
       >
         {/* Search header */}
         <div className="flex items-center gap-3 px-5 py-3 border-b border-border">
@@ -73,19 +72,19 @@ export default function SearchPage() {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
+        <div style={{ borderTop: '1px solid #2E2E2E', padding: '16px 22px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
           <Link
             href="/projects"
-            className="rounded-[8px] px-3 py-2 text-[15px] text-text-muted hover:bg-hover hover:text-text transition-colors duration-150"
+            style={{ display: 'flex', alignItems: 'center', height: '38px', padding: '0 14px', borderRadius: '8px', fontSize: '15px', color: '#EDEDED', background: 'transparent', border: '1px solid transparent', textDecoration: 'none' }}
           >
             Cancel
           </Link>
           <button
             type="button"
-            className="flex items-center gap-2 rounded-[8px] bg-accent px-3 py-2 text-[15px] text-white hover:opacity-90 transition-opacity"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '38px', padding: '0 14px', borderRadius: '8px', background: '#2D7FF9', border: '1px solid #2D7FF9', fontSize: '15px', color: '#fff', fontWeight: 500, cursor: 'pointer' }}
           >
-            Open project{' '}
-            <kbd className="rounded-[4px] border border-white/20 px-1 text-[11px]">↵</kbd>
+            Open project
+            <kbd style={{ background: 'rgba(255,255,255,.22)', borderRadius: '4px', padding: '0 5px', fontSize: '12px' }}>↵</kbd>
           </button>
         </div>
       </div>
