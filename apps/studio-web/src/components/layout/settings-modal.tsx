@@ -174,7 +174,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                   <div className="space-y-3">
                     <p className="text-[15px] text-text-muted">Not connected.</p>
                     <a
-                      href="/login"
+                      href="/connect"
                       onClick={() => onOpenChange(false)}
                       className="inline-flex rounded-[8px] px-3 py-2 text-[15px] text-white hover:opacity-90 transition-opacity"
                       style={{ background: '#2D7FF9' }}

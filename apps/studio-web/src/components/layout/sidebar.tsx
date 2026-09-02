@@ -178,7 +178,7 @@ export function Sidebar() {
               <div className="my-1 h-px bg-border" />
 
               <button
-                onClick={() => { disconnect(); router.replace('/login'); }}
+                onClick={() => { disconnect(); router.replace('/connect'); }}
                 className="flex h-10 w-full items-center gap-[10px] rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150"
               >
                 <LogOut strokeWidth={1.6} className="h-4 w-4 text-text-muted" />

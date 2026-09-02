@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Schibsted_Grotesk } from 'next/font/google';
 import './globals.css';
-import { AppShell } from '@/src/components/layout/app-shell';
 
 const schibsted = Schibsted_Grotesk({
   subsets: ['latin'],
@@ -17,9 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`dark ${schibsted.variable}`}>
-      <body>
-        <AppShell>{children}</AppShell>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
