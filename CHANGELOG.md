@@ -7,9 +7,114 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Planned
-- `apps/studio-web` — Builder UI
-- `packages/ui` — Radix UI component library
+---
+
+## [0.13.0] — 2026-09-02
+
+### Added — `apps/studio-web` (Canvas-style Builder UI) + `packages/ui`
+
+Full frontend build across 10 phases, plus a pixel-perfect dark design system matching the Canvas reference spec.
+
+---
+
+#### Phase 1 — Foundation (`packages/ui` + `apps/studio-web` baseline)
+
+- **`packages/ui`** — 14 Radix UI primitives: `Avatar`, `Badge`, `Button`, `Card`, `Dialog`, `DropdownMenu`, `Input`, `Popover`, `Progress`, `Separator`, `Spinner`, `Tabs`, `Textarea`, `Tooltip`; CVA variant system; `cn` utility
+- **Design token system** — CSS custom properties for all colour, typography, spacing, and radius values; Tailwind config maps tokens to classes; `preview-sm/md/lg` breakpoints at 375/768/1440px (B7 visual verifier)
+- **AppShell** — floating panel layout (`#202020` on `#1C1C1C` window), 272px full-text sidebar, `OnboardingModal` mount point
+
+#### Phase 2 — Home Surface
+
+- **Orchestrator `POST /runs`** — starts `GenerationWorkflow` via Temporal, returns `runId`
+- **`apps/api` project routes** — `POST /v1/projects` (create project + run in DB, fires orchestrator), `GET /v1/projects` (list with latest run status via LATERAL join)
+- **`PromptComposer`** — Canvas-style floating box with `#1C1C1C` bg, layered shadow, typewriter placeholder (45ms/char, 1.4s hold, 25ms delete), "Report" + "Design system" chips, `#3A3A3A`→white send button, `#232323` tray with base selector
+- **`StackPicker`** — transparent tray input with recent-stacks dropdown
+- **`VoiceInputButton`** — Web Speech API with idle/listening/unsupported states
+- **`AttachmentZone`** — drag-and-drop for images/CSV/PDF with chip list
+- **`TemplateStrip`** — 6 static template cards on Home; clicks route to `/templates?id=`
+- **`HomeProjectFeed`** — Latest/Starter ideas tabs, "View all ↗", `#f6f4ef` thumbnail cards
+
+#### Phase 3 — Projects Surface
+
+- **`GET /v1/projects`** updated — adds `artifact_type` + `updated_at` via LATERAL join on `artifacts`
+- **`ProjectsList`** — Canvas-style tabs (All / Starred / Published / Apps / Presentations / Reports), "Select projects" + "+ Create new", Filter/Sort dropdowns, `#f6f4ef` 16:10 thumbnail cards with name+meta outside border
+- **`EmptyState`** — per-filter messaging
+- `/projects/[id]` placeholder wired
+
+#### Phase 4 — Builder Shell Core
+
+- **`useRunEvents`** — SSE consumer hook, cursor-resumable reconnect, `RunPhase` state machine driven by event stream
+- **`RunCard`** — step rows: `48px` tall, `#1F1F1F` bg, `border-radius: 10px`, collapsible; rating chip after `ready`; user bubbles (`#2A2A2A`, 14px border-radius; short replies → 999px pill); AI text unbubbled
+- **`ClarificationGate`** — suspension point panel: ≤3 questions with free-text areas, fallback button when payload malformed (PRD invariant D.6)
+- **`PlanReview`** — approve/reject panel with step tree and estimated credits; approve/reject buttons always render even if plan JSON fails to parse
+- **`PreviewHost`** — sandboxed `<iframe>` with 375/768/1440 breakpoint switcher; `#241f1d` warm canvas bg
+- **`FollowUpBar`** — mini composer always visible at bottom of chat
+- **`BuilderShell`** — full-screen fixed overlay (`#1C1C1C`), Canvas 70px header: logo · project name ▾ · App · panel toggle · base pill (with `#3ECF8E` online dot) · individual Preview/Edit/Annotate mode buttons · white Publish button; 500px chat left + preview right
+
+#### Phase 5 — Visual Edit + Annotations + Undo/Redo
+
+- **Orchestrator `POST /runs/:runId/visual-edit`** → starts `VisualEditWorkflow`
+- **Orchestrator `POST /runs/:runId/annotations`** → starts `AnnotationWorkflow`
+- **`useUndoRedo`** — generic 50-step history hook (`set/undo/redo/canUndo/canRedo/clear`)
+- **`PropertyEditor`** — component picker (from plan steps), property/value selectors, 6% token-snap suggestion, `tokenUsed`/`tokenProposed` display, `Undo2`/`Redo2` buttons
+- **`TokenBrowser`** — colour-swatch grid of all CSS token vars, grouped by category
+- **`AnnotationPanel`** — add annotations per component with critical/minor severity; batch submit; list with `applied`/`needs_input`/`conflicts_with_plan` chips
+- **`PropertiesRail`** — 320px right panel with Properties / Tokens / Annotations tabs
+
+#### Phase 6 — Publish
+
+- **Publish service `GET /publish/:id/versions`** — exposes `store.listVersions()`
+- **`PublishPopover`** — 3-step: configure slug + visibility (5 modes) → public confirmation gate (tables/columns checklist, "I understand…" checkbox, PRD FR-07) → done with copy/open; all wired to `services/publish` port 3006
+- **`VersionHistory`** — fetches and lists versions on mount, "Current" badge, Restore button
+- Builder sub-header with ← Projects link and Publish button (disabled until preview ready)
+
+#### Phase 7 — Design Systems
+
+- **Design service `GET /design-systems`** — `listByWorkspace()` added to store; new HTTP route
+- **Design service `GET /design-systems/:id`** — single record fetch
+- **Design service `PATCH /design-systems/:id`** — now actually calls `store.updateTokens()` (was a stub)
+- **`ColorEditor`** — swatch + name + hex input + WCAG contrast badges (AA/AAA/AA Large/Fail vs white and black)
+- **`TypographyEditor`** — font family + sizes + weights
+- **`SimpleTokenEditor`** — reusable key-value editor for spacing/radii/shadows
+- **`ExtractDialog`** — URL input → POST extract → SSE progress stream → done
+- **`TokenEditor`** — 5-tab editor (Colors / Typography / Spacing / Radii / Shadows), dirty tracking, workspace → project → component inheritance chain
+- **`WcagBadge`** — contrast ratio level with correct variant colour
+- `/design-systems` list and `/design-systems/[id]` editor pages; empty state: single centred muted sentence
+
+#### Phase 8 — Admin Console
+
+- **`CreditsTab`** — balance card + 14-day div-based bar chart + Day/Week/Month period selector; all calls now correctly use `DEV_WORKSPACE_ID` UUID (was string literal `'DEV_WORKSPACE_ID'`)
+- **`ArtifactsTab`** — artifacts table with Force Unpublish confirm dialog
+- **`PolicyTab`** — toggle switches for `allowPublicPublishing`, `requireApprovalForPublish`, `allowGitExport`; credit cap input; T0–T3 model tier checkboxes
+- **`AuditTab`** — debounced filter inputs, monospace action codes, relative timestamps, ↓ CSV export
+- `/admin` page
+
+#### Phase 9 — Templates + B13 Stack Mapping
+
+- **`src/lib/templates.ts`** — 12 templates across 8 categories with full field schemas, semantic roles, and auto-fill prompts
+- **Orchestrator `POST /templates/:templateId/remap`** — simulated B13 output (required fields 0.92 confidence, optional 0.78)
+- **`TemplateGallery`** — type pills + category pills + search + 4-col grid; auto-opens dialog from `?id=` param
+- **`TemplateCard`** — gradient thumbnail by type, required field count, "Use template →"
+- **`StackMappingDialog`** — 3-step: stack ID input → field confidence mapping (auto-mapped ≥0.9 green / confirm 0.7–0.89 ✓✗ / `create_column` info) → create project + redirect to builder
+
+#### Phase 10 — Onboarding Modal (D.14)
+
+- **`OnboardingModal`** — split layout: `from-sky-600 to-sky-800` 3×3 grid left, white content right; logo + "Meet Studio"; exactly two value lines with `LayoutDashboard` and `Pencil` icons; single "Start building →" full-width black CTA; persisted to `localStorage`; never re-fires (PRD invariant D.14: no third bullet, no video, no tour)
+
+#### Design System Redesign
+
+- **Dark theme** — `#1C1C1C` window / `#202020` floating panel / `#282828` surface; single accent `#2D7FF9`; depth from three greys + one hairline border, never shadows
+- **Schibsted Grotesk** — loaded via `next/font/google` for headings and display text
+- **Logo** — exact 2-path SVG layers mark matching the reference spec
+- **Sidebar** — 272px, text + icon nav (1.6px stroke), Recent collapsible, avatar → Appearance submenu (System/Light/Dark) → Settings modal → Sign out
+- **Settings modal** — General (model radio T0–T3, skip planning checkbox, notification toggle) + Account (profile email, Disconnect Stackby)
+
+#### Bug Fixes
+
+- **Dev workspace seed** — `infra/db/migrations/0002_dev_seed.sql`; fixed `workspaceId: 'dev-workspace'` (string) → `DEV_WORKSPACE_ID` UUID constant across all 13 affected files
+- **Design system store schema** — `CREATE TABLE design_systems` has no `brand_url`/`notes`/`created_by` columns; fixed `INSERT` and `toRecord()` to match actual schema
+- **Admin tabs** — all four admin components were sending literal string `'DEV_WORKSPACE_ID'` instead of the imported constant UUID
+- **Design system token saves** — `PATCH /design-systems/:id` was a stub; now correctly calls `store.updateTokens()`
 
 ---
 
