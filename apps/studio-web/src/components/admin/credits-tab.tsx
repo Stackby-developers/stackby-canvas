@@ -27,8 +27,8 @@ export function CreditsTab() {
   useEffect(() => {
     setLoading(true);
     void Promise.all([
-      fetch('/api/credits/balance?workspaceId=DEV_WORKSPACE_ID').then((r) => r.json() as Promise<CreditBalance>),
-      fetch(`/api/admin/usage?workspaceId=DEV_WORKSPACE_ID&period=${period}&groupBy=day`).then(
+      fetch(`/api/credits/balance?workspaceId=${DEV_WORKSPACE_ID}`).then((r) => r.json() as Promise<CreditBalance>),
+      fetch(`/api/admin/usage?workspaceId=${DEV_WORKSPACE_ID}&period=${period}&groupBy=day`).then(
         (r) => r.json() as Promise<{ usage: UsageDay[] }>,
       ),
     ])

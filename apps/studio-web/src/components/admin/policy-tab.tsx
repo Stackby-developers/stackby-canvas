@@ -44,7 +44,7 @@ export function PolicyTab() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/policy?workspaceId=DEV_WORKSPACE_ID')
+    fetch(`/api/admin/policy?workspaceId=${DEV_WORKSPACE_ID}`)
       .then((r) => r.json() as Promise<Policy>)
       .then((p) => {
         setPolicy(p);
@@ -73,7 +73,7 @@ export function PolicyTab() {
       await fetch('/api/admin/policy', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...draft, workspaceId: 'DEV_WORKSPACE_ID' }),
+        body: JSON.stringify({ ...draft, workspaceId: DEV_WORKSPACE_ID }),
       });
       setPolicy(draft);
       setSaved(true);
