@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { X, Settings, User } from 'lucide-react';
+import { useAuth } from '@/src/hooks/use-auth';
 
 interface SettingsModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ const MODELS = [
 
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [tab, setTab] = useState<Tab>('general');
+  const { isConnected, stacks, disconnect } = useAuth();
   const [model, setModel] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('studio_model_pref') ?? 'opus46';
@@ -152,12 +154,35 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               <div className="h-px bg-border" />
               <div>
                 <p className="mb-2 text-[15px] font-medium text-text">Stackby Connection</p>
-                <p className="mb-3 text-[15px] text-text-muted">
-                  Revoke Stackby API access. You can reconnect at any time.
-                </p>
-                <button className="rounded-[8px] border border-border-active bg-surface px-3 py-2 text-[15px] text-text hover:bg-hover transition-colors duration-150">
-                  Disconnect Stackby
-                </button>
+                {isConnected ? (
+                  <div className="space-y-2">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#3ECF8E', flexShrink: 0 }} />
+                      <p className="text-[15px] text-text-muted">Connected</p>
+                    </div>
+                    <p className="text-[13px] text-text-faint">
+                      {stacks.length} stack{stacks.length !== 1 ? 's' : ''} available
+                    </p>
+                    <button
+                      onClick={() => { disconnect(); onOpenChange(false); }}
+                      className="mt-1 rounded-[8px] border border-border-active bg-surface px-3 py-2 text-[15px] text-text hover:bg-hover transition-colors duration-150"
+                    >
+                      Disconnect Stackby
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-[15px] text-text-muted">Not connected.</p>
+                    <a
+                      href="/login"
+                      onClick={() => onOpenChange(false)}
+                      className="inline-flex rounded-[8px] px-3 py-2 text-[15px] text-white hover:opacity-90 transition-opacity"
+                      style={{ background: '#2D7FF9' }}
+                    >
+                      Connect Stackby →
+                    </a>
+                  </div>
+                )}
               </div>
             </>
           )}

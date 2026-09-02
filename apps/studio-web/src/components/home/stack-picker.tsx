@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@/src/hooks/use-auth';
 
 interface StackPickerProps {
   value: string;
@@ -11,6 +12,13 @@ interface StackPickerProps {
 export function StackPicker({ value, onChange, recentStacks = [] }: StackPickerProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { stacks: authStacks } = useAuth();
+
+  // Merge auth stacks (from connected Stackby account) with recent project stacks, deduped
+  const allStacks = [
+    ...authStacks,
+    ...recentStacks.filter((r) => !authStacks.some((a) => a.id === r.id)),
+  ];
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -28,7 +36,7 @@ export function StackPicker({ value, onChange, recentStacks = [] }: StackPickerP
         placeholder="Select a base"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onFocus={() => { if (recentStacks.length > 0) setOpen(true); }}
+        onFocus={() => { if (allStacks.length > 0) setOpen(true); }}
         autoComplete="off"
         spellCheck={false}
         style={{
@@ -41,13 +49,15 @@ export function StackPicker({ value, onChange, recentStacks = [] }: StackPickerP
           fontFamily: 'inherit',
         }}
       />
-      {open && recentStacks.length > 0 && (
+      {open && allStacks.length > 0 && (
         <ul
           className="absolute left-0 right-0 z-20 overflow-hidden"
           style={{ top: 'calc(100% + 8px)', background: '#1E1E1E', border: '1px solid #333', borderRadius: '10px', boxShadow: '0 12px 32px rgba(0,0,0,.5)', padding: '6px' }}
         >
-          <li style={{ padding: '7px 10px 5px', fontSize: '13px', color: '#8A8A8A' }}>Recent</li>
-          {recentStacks.map((s) => (
+          <li style={{ padding: '7px 10px 5px', fontSize: '13px', color: '#8A8A8A' }}>
+            {authStacks.length > 0 ? 'Your bases' : 'Recent'}
+          </li>
+          {allStacks.map((s) => (
             <li key={s.id}>
               <button
                 type="button"

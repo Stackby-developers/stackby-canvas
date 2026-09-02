@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Home, Search, FolderOpen, Palette,
   ChevronDown, ChevronRight, Monitor, Sun, Moon,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { SettingsModal } from './settings-modal';
 import { Logo } from './logo';
+import { useAuth } from '@/src/hooks/use-auth';
 
 const NAV = [
   { href: '/', icon: Home, label: 'Home' },
@@ -26,6 +27,8 @@ type AppearanceMode = 'system' | 'light' | 'dark';
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { disconnect } = useAuth();
   const [recentOpen, setRecentOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
@@ -174,7 +177,10 @@ export function Sidebar() {
 
               <div className="my-1 h-px bg-border" />
 
-              <button className="flex h-10 w-full items-center gap-[10px] rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150">
+              <button
+                onClick={() => { disconnect(); router.replace('/login'); }}
+                className="flex h-10 w-full items-center gap-[10px] rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150"
+              >
                 <LogOut strokeWidth={1.6} className="h-4 w-4 text-text-muted" />
                 Sign out
               </button>
