@@ -5,21 +5,20 @@ import { usePathname } from 'next/navigation';
 import {
   Home, Search, FolderOpen, Palette,
   ChevronDown, ChevronRight, Monitor, Sun, Moon,
-  Keyboard, ThumbsUp, LogOut,
+  LogOut, ThumbsUp, Keyboard,
 } from 'lucide-react';
-import { cn } from '@stackby/ui';
 import { SettingsModal } from './settings-modal';
 
 const NAV = [
-  { href: '/',               icon: Home,       label: 'Home' },
-  { href: '/search',         icon: Search,     label: 'Search' },
-  { href: '/projects',       icon: FolderOpen, label: 'Projects' },
-  { href: '/design-systems', icon: Palette,    label: 'Design systems' },
+  { href: '/', icon: Home, label: 'Home' },
+  { href: '/search', icon: Search, label: 'Search' },
+  { href: '/projects', icon: FolderOpen, label: 'Projects' },
+  { href: '/design-systems', icon: Palette, label: 'Design systems' },
 ] as const;
 
 const RECENT = [
   { id: '1', name: 'Employee Directory Dashboard' },
-  { id: '2', name: 'Regional Athletic Launch Hub' },
+  { id: '2', name: 'Regional Athletic Launch' },
 ];
 
 type AppearanceMode = 'system' | 'light' | 'dark';
@@ -41,50 +40,56 @@ export function Sidebar() {
     else if (mode === 'light') root.classList.remove('dark');
     else {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) root.classList.add('dark');
-      else root.classList.remove('dark');
+      prefersDark ? root.classList.add('dark') : root.classList.remove('dark');
     }
   }
 
   return (
     <>
-      <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-bg overflow-hidden">
+      {(userMenuOpen || appearanceOpen) && (
+        <div
+          className="fixed inset-0 z-30"
+          onClick={() => { setUserMenuOpen(false); setAppearanceOpen(false); }}
+        />
+      )}
+
+      <aside className="relative z-40 hidden md:flex h-full w-14 lg:w-[272px] shrink-0 flex-col overflow-visible">
         {/* Logo */}
-        <div className="flex h-12 items-center px-4">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-text">
-            <span className="text-xs font-bold text-bg">S</span>
+        <div className="flex h-10 items-center px-3 mt-1">
+          <div className="flex h-[22px] w-[22px] items-center justify-center rounded-[4px] bg-text shrink-0">
+            <span className="text-[10px] font-bold text-bg leading-none">S</span>
           </div>
         </div>
 
         {/* Primary nav */}
-        <nav className="px-2 space-y-0.5">
+        <nav className="mt-1 px-2 space-y-0.5">
           {NAV.map((item) => {
             const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={cn(
-                  'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
-                  isActive
-                    ? 'bg-bg-muted font-medium text-text'
-                    : 'text-text-muted hover:bg-bg-muted hover:text-text',
-                )}
+                className={[
+                  'flex h-8 w-full items-center gap-[10px] rounded-[6px] px-2 text-[16px] transition-colors duration-150',
+                  isActive ? 'bg-surface text-text' : 'text-text-secondary hover:bg-hover',
+                ].join(' ')}
               >
-                <item.icon className="h-4 w-4 shrink-0" />
-                {item.label}
+                <item.icon strokeWidth={1.5} className="h-[18px] w-[18px] shrink-0" />
+                <span className="hidden lg:inline truncate">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* Recent */}
-        <div className="mt-4 px-2">
+        <div className="mt-4 px-2 hidden lg:block">
           <button
             onClick={() => setRecentOpen((o) => !o)}
-            className="flex w-full items-center gap-1 px-2.5 py-1 text-xs font-medium text-text-faint hover:text-text-muted transition-colors"
+            className="flex w-full items-center gap-1 px-2 py-1 text-[13px] text-text-faint hover:text-text-muted transition-colors duration-150"
           >
-            {recentOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            {recentOpen
+              ? <ChevronDown strokeWidth={1.5} className="h-3 w-3" />
+              : <ChevronRight strokeWidth={1.5} className="h-3 w-3" />}
             Recent
           </button>
           {recentOpen && (
@@ -93,9 +98,9 @@ export function Sidebar() {
                 <Link
                   key={p.id}
                   href={`/projects/${p.id}`}
-                  className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm text-text-muted hover:bg-bg-muted hover:text-text transition-colors"
+                  className="flex h-8 w-full items-center gap-[10px] rounded-[6px] px-2 text-[15px] text-text-secondary hover:bg-hover transition-colors duration-150"
                 >
-                  <div className="h-3.5 w-3.5 shrink-0 rounded-sm border border-border bg-bg-muted" />
+                  <div className="h-[14px] w-[14px] shrink-0 rounded-[3px] border border-border-active" />
                   <span className="truncate">{p.name}</span>
                 </Link>
               ))}
@@ -106,55 +111,55 @@ export function Sidebar() {
         <div className="flex-1" />
 
         {/* Bottom bar */}
-        <div className="relative border-t border-border px-2 py-2">
-          <div className="flex items-center gap-1.5">
+        <div className="relative px-2 py-3 border-t border-border">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => { setUserMenuOpen((o) => !o); setAppearanceOpen(false); }}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-text text-bg text-xs font-bold hover:opacity-80 transition-opacity"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-white text-[11px] font-semibold hover:opacity-80 transition-opacity"
             >
               R
             </button>
-            <button
-              className="flex items-center justify-center rounded-md p-1.5 text-text-faint hover:text-text hover:bg-bg-muted transition-colors"
-              aria-label="Keyboard shortcuts"
-            >
-              <Keyboard className="h-4 w-4" />
+            <button className="hidden lg:flex h-7 w-7 items-center justify-center rounded-[6px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150">
+              <Keyboard strokeWidth={1.5} className="h-4 w-4" />
             </button>
-            <button className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-text-muted hover:text-text hover:bg-bg-muted transition-colors">
-              <ThumbsUp className="h-3.5 w-3.5" /> Share feedback
+            <button className="hidden lg:flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[15px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150">
+              <ThumbsUp strokeWidth={1.5} className="h-3.5 w-3.5" />
+              Share feedback
             </button>
           </div>
 
           {userMenuOpen && (
-            <div className="absolute bottom-full left-0 mb-1 w-52 rounded-lg border border-border bg-bg shadow-lg py-1 z-50">
+            <div
+              className="absolute bottom-full left-0 mb-2 w-52 rounded-[10px] border border-[#333] py-1.5 z-50"
+              style={{ background: '#1E1E1E', boxShadow: '0 12px 32px rgba(0,0,0,.5)' }}
+            >
               <div className="relative">
                 <button
                   onClick={() => setAppearanceOpen((o) => !o)}
-                  className="flex w-full items-center justify-between px-3 py-2 text-sm text-text hover:bg-bg-muted transition-colors"
+                  className="flex h-10 w-full items-center justify-between rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150"
                 >
-                  <div className="flex items-center gap-2">
-                    <Monitor className="h-4 w-4 text-text-muted" /> Appearance
+                  <div className="flex items-center gap-[10px]">
+                    <Monitor strokeWidth={1.5} className="h-4 w-4 text-text-muted" />
+                    Appearance
                   </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-text-faint" />
+                  <ChevronRight strokeWidth={1.5} className="h-3.5 w-3.5 text-text-faint" />
                 </button>
                 {appearanceOpen && (
-                  <div className="absolute left-full top-0 ml-1 w-36 rounded-lg border border-border bg-bg shadow-lg py-1 z-50">
-                    {(
-                      [
-                        ['system', Monitor, 'System'],
-                        ['light', Sun, 'Light'],
-                        ['dark', Moon, 'Dark'],
-                      ] as const
-                    ).map(([mode, Icon, label]) => (
+                  <div
+                    className="absolute left-full top-0 ml-1 w-36 rounded-[10px] border border-[#333] py-1.5 z-50"
+                    style={{ background: '#1E1E1E', boxShadow: '0 12px 32px rgba(0,0,0,.5)' }}
+                  >
+                    {([['system', Monitor, 'System'], ['light', Sun, 'Light'], ['dark', Moon, 'Dark']] as const).map(([mode, Icon, label]) => (
                       <button
                         key={mode}
                         onClick={() => applyAppearance(mode)}
-                        className="flex w-full items-center justify-between px-3 py-2 text-sm text-text hover:bg-bg-muted transition-colors"
+                        className="flex h-10 w-full items-center justify-between rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150"
                       >
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4 text-text-muted" /> {label}
+                        <div className="flex items-center gap-[10px]">
+                          <Icon strokeWidth={1.5} className="h-4 w-4 text-text-muted" />
+                          {label}
                         </div>
-                        {appearance === mode && <span className="text-accent">✓</span>}
+                        {appearance === mode && <span className="text-accent text-xs">✓</span>}
                       </button>
                     ))}
                   </div>
@@ -163,15 +168,16 @@ export function Sidebar() {
 
               <button
                 onClick={() => { setSettingsOpen(true); setUserMenuOpen(false); }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-text hover:bg-bg-muted transition-colors"
+                className="flex h-10 w-full items-center gap-[10px] rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150"
               >
                 Settings
               </button>
 
               <div className="my-1 h-px bg-border" />
 
-              <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-text hover:bg-bg-muted transition-colors">
-                <LogOut className="h-4 w-4 text-text-muted" /> Sign out
+              <button className="flex h-10 w-full items-center gap-[10px] rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150">
+                <LogOut strokeWidth={1.5} className="h-4 w-4 text-text-muted" />
+                Sign out
               </button>
             </div>
           )}

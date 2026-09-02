@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, ChevronDown, SlidersHorizontal } from 'lucide-react';
-import { Input } from '@stackby/ui';
+import { Plus, ChevronDown, MoreHorizontal } from 'lucide-react';
 import type { Project, ArtifactType } from '@/src/lib/types';
-import { ProjectCard } from './project-card';
+import { ARTIFACT_TYPE_LABEL, formatRelativeTime } from '@/src/lib/format';
 import { EmptyState } from './empty-state';
 
 type CanvasTab = 'all' | 'starred' | 'published' | 'apps' | 'presentations' | 'reports';
@@ -14,99 +13,127 @@ interface ProjectsListProps {
   initialProjects: Project[];
 }
 
-const APP_TYPES: ArtifactType[] = ['dashboard', 'portal', 'gallery', 'form'];
+const APP_TYPES: ArtifactType[] = ['dashboard', 'portal', 'gallery', 'form', 'website', 'document'];
+
+const TYPE_EMOJI: Record<string, string> = {
+  dashboard: '📊', portal: '🏢', report: '📄', form: '📋', gallery: '🖼️',
+  website: '🌐', document: '📝', presentation: '🎞️',
+};
+
+const TABS: { value: CanvasTab; label: string }[] = [
+  { value: 'all',           label: 'All' },
+  { value: 'starred',       label: 'Starred' },
+  { value: 'published',     label: 'Published' },
+  { value: 'apps',          label: 'Apps' },
+  { value: 'presentations', label: 'Presentations' },
+  { value: 'reports',       label: 'Reports' },
+];
 
 export function ProjectsList({ initialProjects }: ProjectsListProps) {
-  const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<CanvasTab>('all');
 
   function filterByTab(p: Project): boolean {
     switch (activeTab) {
-      case 'all': return true;
-      case 'starred': return false; // placeholder
-      case 'published': return p.status === 'published';
-      case 'apps': return p.artifactType !== null && APP_TYPES.includes(p.artifactType);
+      case 'all':           return true;
+      case 'starred':       return false;
+      case 'published':     return p.status === 'published';
+      case 'apps':          return p.artifactType !== null && APP_TYPES.includes(p.artifactType as ArtifactType);
       case 'presentations': return p.artifactType === 'presentation';
-      case 'reports': return p.artifactType === 'report';
+      case 'reports':       return p.artifactType === 'report';
     }
   }
 
-  const visible = initialProjects
-    .filter(filterByTab)
-    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
-
-  const tabs: { value: CanvasTab; label: string }[] = [
-    { value: 'all',           label: 'All' },
-    { value: 'starred',       label: 'Starred' },
-    { value: 'published',     label: 'Published' },
-    { value: 'apps',          label: 'Apps' },
-    { value: 'presentations', label: 'Presentations' },
-    { value: 'reports',       label: 'Reports' },
-  ];
+  const visible = initialProjects.filter(filterByTab);
 
   return (
-    <div className="px-8 py-8">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <button className="flex items-center gap-1 text-2xl font-semibold text-text hover:text-text-muted transition-colors">
-          Projects <ChevronDown className="h-5 w-5 mt-0.5" />
-        </button>
+      <div className="flex items-center justify-between px-6 pt-6 pb-4">
+        <div className="flex items-center gap-1">
+          <h1 className="text-[26px] font-semibold text-text">Projects</h1>
+          <ChevronDown strokeWidth={1.5} className="h-5 w-5 text-text-muted mt-1" />
+        </div>
         <div className="flex items-center gap-2">
-          <button className="rounded-lg border border-border bg-bg px-3.5 py-1.5 text-sm font-medium text-text hover:bg-bg-muted transition-colors">
+          <button className="rounded-[8px] border border-border-active bg-surface px-3 py-2 text-[15px] text-text hover:bg-hover transition-colors duration-150">
             Select projects
           </button>
           <Link
             href="/"
-            className="flex items-center gap-1.5 rounded-lg bg-text px-3.5 py-1.5 text-sm font-medium text-bg hover:opacity-80 transition-opacity"
+            className="flex items-center gap-1 rounded-[8px] border border-border-bright bg-input px-3 py-2 text-[15px] text-text hover:bg-surface transition-colors duration-150"
           >
-            <Plus className="h-4 w-4" /> Create new
+            <Plus strokeWidth={1.5} className="h-4 w-4" /> Create new
           </Link>
         </div>
       </div>
 
-      {/* Tabs + filter row */}
-      <div className="flex items-center justify-between border-b border-border mb-6">
-        <div className="flex">
-          {tabs.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={`px-1 pb-3 mr-5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                activeTab === tab.value
-                  ? 'border-text text-text'
-                  : 'border-transparent text-text-muted hover:text-text'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 pb-3">
-          <Input
-            placeholder="Search…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-7 text-xs w-40"
-          />
-          <button className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-text-muted border border-border hover:bg-bg-muted transition-colors">
-            <SlidersHorizontal className="h-3 w-3" /> Filter by base <ChevronDown className="h-3 w-3" />
+      {/* Tabs */}
+      <div className="flex items-end border-b border-border px-6">
+        {TABS.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setActiveTab(tab.value)}
+            className={[
+              'mr-5 pb-2 pt-1 text-[15px] border-b-2 transition-colors duration-150 -mb-px',
+              activeTab === tab.value
+                ? 'border-text text-text font-medium'
+                : 'border-transparent text-text-faint hover:text-text-muted',
+            ].join(' ')}
+          >
+            {tab.label}
           </button>
-          <button className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-text-muted border border-border hover:bg-bg-muted transition-colors">
-            Sort: Newest <ChevronDown className="h-3 w-3" />
+        ))}
+        <div className="flex-1" />
+        <div className="flex items-center gap-4 pb-2">
+          <button className="text-[15px] text-text-muted hover:text-text transition-colors duration-150">
+            Filter by base ⌄
+          </button>
+          <button className="text-[15px] text-text-muted hover:text-text transition-colors duration-150">
+            Sort: Newest ⌄
           </button>
         </div>
       </div>
 
       {/* Grid */}
-      {visible.length === 0 ? (
-        <EmptyState filter={activeTab === 'published' ? 'published' : activeTab === 'all' ? 'all' : 'draft'} />
-      ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visible.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
-      )}
+      <div className="px-6 py-6">
+        {visible.length === 0 ? (
+          <EmptyState filter={activeTab === 'published' ? 'published' : activeTab === 'all' ? 'all' : 'draft'} />
+        ) : (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {visible.map((project) => (
+              <Link key={project.id} href={`/projects/${project.id}`} className="block group">
+                <div className="rounded-[14px] border border-border-strong bg-surface p-2 transition-all duration-150 hover:-translate-y-px hover:border-border-bright">
+                  {/* Thumbnail */}
+                  <div className="mb-2 flex aspect-[16/10] items-center justify-center overflow-hidden rounded-[10px] bg-hover">
+                    <span className="text-5xl opacity-15">
+                      {TYPE_EMOJI[project.artifactType ?? 'dashboard'] ?? '🖼️'}
+                    </span>
+                  </div>
+                  {/* Name row */}
+                  <div className="flex items-center justify-between px-0.5">
+                    <p className="truncate text-[15px] text-text">{project.name}</p>
+                    <button
+                      type="button"
+                      onClick={(e) => e.preventDefault()}
+                      className="ml-2 shrink-0 rounded-[6px] p-1 text-text-faint opacity-0 group-hover:opacity-100 hover:bg-hover hover:text-text-muted transition-all duration-150"
+                    >
+                      <MoreHorizontal strokeWidth={1.5} className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {/* Meta row */}
+                  <div className="flex items-center justify-between px-0.5">
+                    <p className="text-[13px] text-text-faint">
+                      {project.artifactType ? (ARTIFACT_TYPE_LABEL[project.artifactType] ?? 'App') : 'App'} · {project.status}
+                    </p>
+                    <p className="text-[13px] text-text-faint">
+                      {project.updatedAt ? formatRelativeTime(typeof project.updatedAt === 'string' ? project.updatedAt : String(project.updatedAt)) : ''}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

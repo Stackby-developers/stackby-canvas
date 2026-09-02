@@ -4,10 +4,10 @@ import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 import type { Project } from '@/src/lib/types';
 
 function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning. What's first?";
-  if (hour < 17) return "Good afternoon. What's the idea?";
-  return "Good evening. What do you want to build?";
+  const h = new Date().getHours();
+  if (h < 12) return "Morning. What's first?";
+  if (h < 17) return "What's the idea today?";
+  return "Fresh start. What are we making?";
 }
 
 export default async function HomePage() {
@@ -32,16 +32,36 @@ export default async function HomePage() {
     .map((p) => ({ id: p.stackId, name: p.name }));
 
   return (
-    <div className="flex h-full flex-col overflow-auto">
-      <div className="flex flex-col items-center justify-center px-6 pt-16 pb-8">
-        <h1 className="mb-8 text-3xl font-semibold tracking-tight text-text">
+    <div className="flex h-full flex-col">
+      {/* Centered composer area */}
+      <div className="flex flex-1 flex-col items-center justify-center px-6 pb-6">
+        {/* Wordmark row */}
+        <div className="mb-6 flex items-center gap-2">
+          <span className="text-[16px] font-semibold text-text">Studio</span>
+          <span
+            className="rounded-full px-2 py-0.5 text-[12px] font-medium"
+            style={{
+              background: 'hsl(var(--color-badge-bg))',
+              color: 'hsl(var(--color-badge-text))',
+            }}
+          >
+            Experiment
+          </span>
+        </div>
+
+        {/* Greeting */}
+        <h1 className="mb-8 text-center text-[44px] font-semibold leading-[1.1] text-text">
           {getGreeting()}
         </h1>
-        <div className="w-full max-w-2xl">
+
+        {/* Composer */}
+        <div className="w-full max-w-[832px]">
           <PromptComposer recentStacks={recentStacks} />
         </div>
       </div>
-      <div className="px-6 pb-8">
+
+      {/* Project feed */}
+      <div className="px-6 pb-6">
         <HomeProjectFeed projects={recentProjects} />
       </div>
     </div>

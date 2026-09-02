@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowUp, Plus, LayoutTemplate, Palette, ChevronDown } from 'lucide-react';
 import type { ArtifactType } from '@/src/lib/types';
 import { StackPicker } from './stack-picker';
 import { VoiceInputButton } from './voice-input-button';
-import { AttachmentZone } from './attachment-zone';
 import { DEV_WORKSPACE_ID, DEV_USER_ID } from '@/src/lib/dev-constants';
+import { useTypewriter } from '@/src/hooks/use-typewriter';
 
 const MAX_CHARS = 4000;
 
@@ -17,6 +17,8 @@ interface PromptComposerProps {
 
 export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const typewriterText = useTypewriter();
   const [prompt, setPrompt] = useState('');
   const [stackId, setStackId] = useState('');
   const [artifactType, setArtifactType] = useState<ArtifactType>('dashboard');
@@ -25,6 +27,7 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit = prompt.trim().length > 0 && stackId.trim().length > 0 && !submitting;
+  const isReport = artifactType === 'report';
 
   async function handleSubmit() {
     if (!canSubmit) return;
@@ -52,91 +55,116 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
     }
   }
 
-  const isApp = artifactType === 'dashboard' || artifactType === 'portal' || artifactType === 'gallery' || artifactType === 'form';
-  const isReport = artifactType === 'report';
-
   return (
     <div>
-      <div className="rounded-xl border border-border bg-bg shadow-sm">
+      <div
+        className="rounded-2xl border border-border bg-bg overflow-hidden"
+        style={{ boxShadow: '0 0 1px rgba(0,0,0,.48), 0 0 2px rgba(0,0,0,.64), 0 8px 24px rgba(0,0,0,.32)' }}
+      >
         {/* Textarea */}
         <textarea
-          className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-sm text-text placeholder:text-text-faint outline-none min-h-[120px]"
-          placeholder="Build me a landing website for my..."
           value={prompt}
           onChange={(e) => { if (e.target.value.length <= MAX_CHARS) setPrompt(e.target.value); }}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void handleSubmit(); }}
+          placeholder={prompt.length === 0 ? typewriterText : ''}
           disabled={submitting}
+          rows={3}
+          className="block w-full resize-none bg-transparent px-5 pt-5 pb-3 text-[15px] text-text placeholder:text-text-faint outline-none min-h-[72px]"
         />
 
         {/* Attachment chips */}
         {files.length > 0 && (
-          <div className="px-4 pb-2">
-            <AttachmentZone files={files} onChange={setFiles} />
+          <div className="px-4 pb-2 flex flex-wrap gap-1.5">
+            {files.map((f, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-1 rounded-full border border-border-active bg-surface px-2.5 py-1 text-[13px] text-text-muted"
+              >
+                <span className="truncate max-w-[120px]">{f.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
+                  className="ml-1 text-text-faint hover:text-text-muted transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Toolbar row */}
-        <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
-          {/* Left */}
+        {/* Control row */}
+        <div className="flex items-center gap-1 px-3 pb-3">
           <button
             type="button"
-            onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.multiple = true; input.onchange = (e) => { const f = Array.from((e.target as HTMLInputElement).files ?? []); setFiles((prev) => [...prev, ...f].slice(0, 5)); }; input.click(); }}
-            className="rounded-md p-1.5 text-text-muted hover:bg-bg-muted hover:text-text transition-colors"
-            title="Attach file"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-strong bg-surface text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150"
           >
-            <Plus className="h-4 w-4" />
+            <Plus strokeWidth={1.5} className="h-4 w-4" />
           </button>
-          <button type="button" className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-text-muted hover:bg-bg-muted hover:text-text transition-colors">
-            <LayoutTemplate className="h-3.5 w-3.5" /> Templates <ChevronDown className="h-3 w-3" />
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            multiple
+            accept="image/*,.csv,.pdf"
+            onChange={(e) => {
+              if (e.target.files) setFiles((prev) => [...prev, ...Array.from(e.target.files!)].slice(0, 5));
+            }}
+          />
+
+          <button
+            type="button"
+            onClick={() => setArtifactType(isReport ? 'dashboard' : 'report')}
+            className="flex h-9 items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3 text-[15px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150"
+          >
+            <LayoutTemplate strokeWidth={1.5} className="h-3.5 w-3.5" />
+            {isReport ? 'Report' : 'App'}
+            <ChevronDown strokeWidth={1.5} className="h-3 w-3" />
           </button>
-          <button type="button" className="flex items-center gap-1 rounded-md px-2 py-1.5 text-xs text-text-muted hover:bg-bg-muted hover:text-text transition-colors">
-            <Palette className="h-3.5 w-3.5" /> Design system <ChevronDown className="h-3 w-3" />
+
+          <button
+            type="button"
+            className="flex h-9 items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3 text-[15px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150"
+          >
+            <Palette strokeWidth={1.5} className="h-3.5 w-3.5" />
+            Design system
+            <ChevronDown strokeWidth={1.5} className="h-3 w-3" />
           </button>
 
           <div className="flex-1" />
 
-          {/* Right */}
-          <button
-            type="button"
-            onClick={() => setArtifactType('dashboard')}
-            className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${isApp ? 'bg-bg-muted text-text' : 'text-text-muted hover:bg-bg-muted hover:text-text'}`}
-          >
-            App
-          </button>
-          <button
-            type="button"
-            onClick={() => setArtifactType('report')}
-            className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${isReport ? 'bg-bg-muted text-text' : 'text-text-muted hover:bg-bg-muted hover:text-text'}`}
-          >
-            Report
-          </button>
           <VoiceInputButton
             onTranscript={(text) => setPrompt((prev) => (prev ? `${prev} ${text}` : text).slice(0, MAX_CHARS))}
             disabled={submitting}
           />
+
           <button
             type="button"
             onClick={() => void handleSubmit()}
             disabled={!canSubmit}
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-text text-bg disabled:opacity-30 transition-opacity hover:opacity-80"
+            className={[
+              'flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors duration-150',
+              canSubmit ? 'bg-text text-bg hover:opacity-80' : 'bg-border-active text-text-faint',
+            ].join(' ')}
           >
             {submitting
-              ? <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-bg border-t-transparent" />
-              : <ArrowUp className="h-3.5 w-3.5" />}
+              ? <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              : <ArrowUp strokeWidth={2} className="h-4 w-4" />}
           </button>
         </div>
 
-        {/* Base selector row */}
-        <div className="flex items-center gap-2 px-4 py-2.5 border-t border-border">
-          <div className="h-4 w-4 rounded-sm bg-bg-muted border border-border flex items-center justify-center">
-            <span className="text-[8px] text-text-muted font-bold leading-none">S</span>
+        {/* Base selector footer */}
+        <div className="flex items-center gap-2 border-t border-border px-4 py-2.5 bg-hover">
+          <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-border-active">
+            <span className="text-[8px] font-bold text-text-faint leading-none">S</span>
           </div>
           <StackPicker value={stackId} onChange={setStackId} recentStacks={recentStacks} />
         </div>
       </div>
 
       {error !== null && (
-        <p className="mt-2 text-xs text-destructive">{error}</p>
+        <p className="mt-2 text-[13px] text-destructive">{error}</p>
       )}
     </div>
   );
