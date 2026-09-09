@@ -9,6 +9,56 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.18.0] — 2026-09-10
+
+### Added — Phase 4 remaining: load tests, security pen tests, documentation site, SOC 2 data retention
+
+#### Load tests (`load-tests/`) — committed `bb033d6`
+
+k6 load test suite targeting **10× beta peak (5,000 VU)** with the PRD gate of **p99 < 2s** for the serve route:
+
+- `scenarios/serve-artifact.js` — ramps 0→200→500→2500→5000 VU over 10 min; thresholds `p(99)<2000ms` + `error_rate<1%`
+- `scenarios/api-projects.js` — 100 VU steady; `p(95)<500ms` / `p(99)<1000ms` per endpoint
+- `scenarios/publish-meta.js` — ramping arrival rate to 500 req/s; `p(99)<300ms` (Redis cache validation)
+- `scenarios/full-flow.js` — 10 VU smoke with `group()` step timing
+- `load-tests/lib/helpers.js` — shared URL constants, `randomSlug()`, `checkStatus()`
+- `load-tests/k6.config.js` — suite registry and shared threshold constants
+- `load-tests/README.md` — run instructions, env vars, results interpretation
+
+#### Security pen tests (`services/publish/src/__tests__/security.test.ts`)
+
+6 suites, 17 tests using Fastify `inject()` (no network required):
+
+1. **Visibility enforcement** — unknown slugs 404/401 never 200/500; forged cookies rejected; forged JWTs rejected; no `Server: Fastify` header leakage; null-byte paths don't 500
+2. **Rate limiting** — 11 rapid requests → at least one 429; 429 body has `error` field
+3. **Open redirect prevention** — `https://evil.com` stripped; `//evil.com` stripped; relative `/p/my-artifact` passes through
+4. **CSP safety** — `unsafe-eval` never present; `X-Content-Type-Options: nosniff`; restrictive `X-Frame-Options`
+5. **Cookie security** — `__ap_*` cookies are `HttpOnly` + `SameSite=Lax`
+6. **Input validation** — path traversal domain rejected; 1-char domain rejected; empty body 400; empty password never `allowed:true`; meta 404 is structured JSON
+
+#### Documentation site (`apps/docs`)
+
+Next.js 14 App Router docs site (port 3001, static export) with 7 pages:
+
+- `/` — Overview, how-it-works, cards linking to all sections
+- `/quickstart` — Connect PAT → write prompt → review plan → watch build → publish
+- `/concepts` — Artifacts (8 types), stacks, plans, bindings, runs, credits/tiers
+- `/builder` — Effective prompts, plan review, run cards, preview, visual editing, follow-ups, git export
+- `/publishing` — Visibility modes table, publish flow, version history/rollback, custom domains, SSO viewer, unpublishing
+- `/api-reference` — All REST endpoints across `apps/api`, `services/orchestrator`, `services/publish`, `services/git`, `services/design`
+- `/sdk` — `useRows`, `useRecord`, `useCreateRow`, `useUpdateRow`, `useDeleteRow`, `useView`, `DataInspector`, `useMutation`, read-only column types
+- `/security` — Data Gateway enforcement, workspace isolation (RLS), published artifact security, CSP, build sandbox, audit log, data retention
+
+DocsLayout sidebar with all section links; inline CSS design tokens (no Tailwind dependency).
+
+#### SOC 2 data retention
+
+- **`infra/db/migrations/0003_retention_policies.sql`** — `retention_policies` table (workspace-configurable), `system_retention_defaults` table (runs: 90d, audit_log: 7y, credit_ledger: 7y anonymise, artifacts: 1y), partial indexes for efficient pruning, `retention_job_log` table for SOC 2 evidence trail
+- **`apps/api/src/jobs/retention.ts`** — nightly job: loads defaults, runs type-specific pruners (hard-delete for runs/artifacts/audit; anonymise credit ledger descriptions), logs every run to `retention_job_log`, exits non-zero on error for cron alerting. Run with `npx tsx src/jobs/retention.ts` or schedule at `0 2 * * *`.
+- **`docs/soc2-controls.md`** — Full SOC 2 Type II controls matrix covering CC1–CC9, A1, C1. 28 controls mapped to implementation files. Gaps table with priorities and target dates (automated backup job, external pen test, incident runbook, Type II audit engagement Q1 2027).
+
+---
+
 ## [0.17.0] — 2026-09-10
 
 ### Added — Phase 4: performance hardening, security fixes, accessibility, eval harness
