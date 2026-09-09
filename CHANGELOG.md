@@ -9,6 +9,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.16.0] — 2026-09-10
+
+### Added — Custom domains, SSO viewer OAuth, Credits UI
+
+Completes all remaining PRD Phase 3 items.
+
+#### Custom domain (`services/publish` + `apps/studio-web`)
+
+- **`services/publish/src/routes/custom-domain-route.ts`** — `PATCH /publish/:deploymentId/domain` accepts `{ domain: string | null }`. Validates the hostname with `/^[a-z0-9.-]{4,253}$/`, clears the old `domain:*` Redis key, invalidates the slug cache, and persists via the store.
+- **`services/publish/src/deployment/store.ts`** — added `setCustomDomain(deploymentId, domain | null)` (`UPDATE deployments SET custom_domain=$1 WHERE id=$2`).
+- **`(app)/api/publish/[deploymentId]/domain/route.ts`** — PATCH proxy.
+- **`PublishPopover` done step** — "Custom domain" section below version history: input for `app.yourcompany.com`, Save button with spinner/check states, and a CNAME instructions line that appears after a successful save (`CNAME {domain} → {slug}.studio.stackby.com`).
+
+#### SSO viewer OAuth loop (`services/publish` + `apps/studio-web`)
+
+- **`services/publish/src/routes/auth-start-route.ts`** — `GET /auth/start?returnTo=`. Generates PKCE, stores `{ codeVerifier, returnTo }` in Redis at `pkce:{state}` (600s TTL), and 302-redirects to the Stackby OAuth2 authorize URL. Pairs with the existing `auth-callback.ts` which exchanges the code, sets `__studio_session`, and redirects to `returnTo`.
+- **`(app)/api/publish/auth/start/route.ts`** — transparent redirect proxy: forwards browser to `PUBLISH_URL/auth/start?returnTo=…`.
+- **`app/p/[slug]/page.tsx` `AuthGate`** — "Sign in with Stackby" now links to `/api/publish/auth/start?returnTo=/p/{slug}` (the PKCE OAuth2 flow) instead of the Studio PAT `/connect` page, so viewers get a proper session cookie that the publish serve-route can validate.
+
+#### Credits UI (`apps/studio-web`)
+
+- **`(app)/api/credits/history/route.ts`** — proxies `GET /v1/credits/history` from `apps/api`.
+- **`SettingsModal` Credits tab** — third tab ("Credits", Zap icon) renders `CreditsPanel`: balance card with animated progress bar (used/total), "Add credits" CTA linking to billing page with external link icon, and a recent transactions list (10 entries) with signed amounts colored green/red.
+
+---
+
 ## [0.15.0] — 2026-09-10
 
 ### Added — Git export (`services/git` + `apps/studio-web`)

@@ -90,15 +90,15 @@ function UnpublishedGate() {
 }
 
 function AuthGate({ slug }: { slug: string }) {
+  // Use the publish service's PKCE OAuth2 flow so the session cookie
+  // is set on the publish service domain (required for serve-route auth).
+  const ssoHref = `/api/publish/auth/start?returnTo=${encodeURIComponent(`/p/${slug}`)}`;
   return (
     <GateCard>
       <div style={S.logoWrap} dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />
       <h1 style={S.heading}>Sign in to view</h1>
       <p style={S.sub}>This artifact is only available to workspace members.</p>
-      <a
-        href={`/connect?next=/p/${slug}`}
-        style={{ ...S.btn, textDecoration: 'none', marginTop: '4px' }}
-      >
+      <a href={ssoHref} style={{ ...S.btn, textDecoration: 'none', marginTop: '4px' }}>
         <LogIn size={15} strokeWidth={1.6} />
         Sign in with Stackby
       </a>
