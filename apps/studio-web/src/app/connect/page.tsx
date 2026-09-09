@@ -71,7 +71,7 @@ export default function ConnectPage() {
   if (loading) {
     return (
       <div style={S.page}>
-        <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2px solid #eaeaea', borderTopColor: '#202020', animation: 'spin .7s linear infinite' }} />
+        <div role="status" aria-label="Loading" style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2px solid #eaeaea', borderTopColor: '#202020', animation: 'spin .7s linear infinite' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
@@ -129,7 +129,7 @@ export default function ConnectPage() {
                   style={{ ...S.input, ...(error ? { borderColor: '#d32f2f' } : {}) }}
                   autoComplete="off"
                 />
-                <button type="button" onClick={() => setShowPat((s) => !s)} style={S.eyeBtn}>
+                <button type="button" aria-label={showPat ? 'Hide token' : 'Show token'} onClick={() => setShowPat((s) => !s)} style={S.eyeBtn}>
                   {showPat ? <EyeOff size={14} strokeWidth={1.6} /> : <Eye size={14} strokeWidth={1.6} />}
                 </button>
               </div>
@@ -161,8 +161,8 @@ export default function ConnectPage() {
                   <strong style={{ color: '#202020' }}>data.records:read</strong> and{' '}
                   <strong style={{ color: '#202020' }}>schema.bases:read</strong> scopes.
                 </p>
-                <a href="https://stackby.com/account/api-keys" target="_blank" rel="noopener noreferrer" style={S.helpLink}>
-                  Open API Keys <ExternalLink size={11} strokeWidth={1.6} />
+                <a href="https://stackby.com/account/api-keys" target="_blank" rel="noopener noreferrer" style={S.helpLink} aria-label="Open API Keys (opens in new tab)">
+                  Open API Keys <ExternalLink size={11} strokeWidth={1.6} aria-hidden="true" />
                 </a>
               </div>
             </form>

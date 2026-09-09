@@ -87,6 +87,8 @@ export function Sidebar() {
         <div className="mt-4 px-2 hidden lg:block">
           <button
             onClick={() => setRecentOpen((o) => !o)}
+            aria-expanded={recentOpen}
+            aria-controls="sidebar-recent-list"
             className="flex w-full items-center gap-1 px-2 py-1 text-[13px] text-text-faint hover:text-text-muted transition-colors duration-150"
           >
             {recentOpen
@@ -95,7 +97,7 @@ export function Sidebar() {
             Recent
           </button>
           {recentOpen && (
-            <div className="mt-0.5 space-y-0.5">
+            <div id="sidebar-recent-list" className="mt-0.5 space-y-0.5">
               {RECENT.map((p) => (
                 <Link
                   key={p.id}
@@ -117,11 +119,13 @@ export function Sidebar() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => { setUserMenuOpen((o) => !o); setAppearanceOpen(false); }}
+              aria-label="Open user menu"
+              aria-expanded={userMenuOpen}
               className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-white text-[11px] font-semibold hover:opacity-80 transition-opacity"
             >
               R
             </button>
-            <button className="hidden lg:flex h-7 w-7 items-center justify-center rounded-[6px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150">
+            <button aria-label="Keyboard shortcuts" className="hidden lg:flex h-7 w-7 items-center justify-center rounded-[6px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150">
               <Keyboard strokeWidth={1.6} className="h-4 w-4" />
             </button>
             <button className="hidden lg:flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[15px] text-text-muted hover:bg-hover hover:text-text-secondary transition-colors duration-150">
@@ -138,6 +142,7 @@ export function Sidebar() {
               <div className="relative">
                 <button
                   onClick={() => setAppearanceOpen((o) => !o)}
+                  aria-expanded={appearanceOpen}
                   className="flex h-10 w-full items-center justify-between rounded-[8px] px-3 text-[15px] text-text hover:bg-[#2A2A2A] transition-colors duration-150"
                 >
                   <div className="flex items-center gap-[10px]">

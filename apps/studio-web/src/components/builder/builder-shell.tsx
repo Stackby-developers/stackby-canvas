@@ -82,7 +82,8 @@ export function BuilderShell({ projectId, runId, artifactName = 'Untitled', arti
         <button
           onClick={() => setShowRail((o) => !o)}
           className="rounded-[6px] p-1.5 text-text-muted hover:bg-surface hover:text-text transition-colors duration-150"
-          title="Toggle properties panel"
+          aria-label="Toggle properties panel"
+          aria-pressed={showRail}
         >
           <svg
             className="h-4 w-4"
@@ -107,7 +108,7 @@ export function BuilderShell({ projectId, runId, artifactName = 'Untitled', arti
             <span style={{ color: '#fff', fontSize: '15px', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {stackId || 'Select a base'}
             </span>
-            <button style={{ color: '#8A8A8A', display: 'flex', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <button aria-label="Reconnect to base" style={{ color: '#8A8A8A', display: 'flex', background: 'none', border: 'none', cursor: 'pointer' }}>
               <RotateCcw strokeWidth={1.6} style={{ width: '14px', height: '14px' }} />
             </button>
           </div>
@@ -123,6 +124,7 @@ export function BuilderShell({ projectId, runId, artifactName = 'Untitled', arti
             ] as const).map(({ id, Icon, label, extra }) => (
               <button
                 key={id}
+                aria-pressed={view === id}
                 onClick={() => setView(id === 'annotate' ? 'preview' : (id as BuilderView))}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px',

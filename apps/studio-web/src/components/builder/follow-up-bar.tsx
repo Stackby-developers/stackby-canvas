@@ -40,6 +40,7 @@ export function FollowUpBar({ phase, onSubmit }: FollowUpBarProps) {
             }
           }}
           placeholder="Ask me anything…"
+          aria-label="Follow-up prompt"
           disabled={isBuilding}
           rows={1}
           style={{
@@ -61,6 +62,7 @@ export function FollowUpBar({ phase, onSubmit }: FollowUpBarProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px 12px' }}>
           <button
             type="button"
+            aria-label="Attach file"
             style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #363636', background: '#232323', display: 'grid', placeItems: 'center', flexShrink: 0, cursor: 'pointer' }}
           >
             <Plus strokeWidth={1.6} style={{ width: '16px', height: '16px', color: '#8A8A8A' }} />
@@ -68,12 +70,14 @@ export function FollowUpBar({ phase, onSubmit }: FollowUpBarProps) {
           <div style={{ flex: 1 }} />
           <button
             type="button"
+            aria-label="Voice input"
             style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #363636', background: '#232323', display: 'grid', placeItems: 'center', flexShrink: 0, cursor: 'pointer' }}
           >
             <Mic strokeWidth={1.6} style={{ width: '16px', height: '16px', color: '#8A8A8A' }} />
           </button>
           <button
             type="button"
+            aria-label="Send message"
             onClick={handleSubmit}
             disabled={!canSubmit}
             style={{

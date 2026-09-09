@@ -154,6 +154,9 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
       onClick={(e) => { if (e.target === e.currentTarget) onOpenChange(false); }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
         className="relative flex h-[520px] w-[580px] overflow-hidden rounded-[14px] border border-border"
         style={{ background: '#1C1C1C', boxShadow: '0 12px 32px rgba(0,0,0,.5)' }}
       >
@@ -185,7 +188,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             <CreditsPanel />
           ) : tab === 'general' ? (
             <>
-              <h2 className="text-[16px] font-semibold text-text">General</h2>
+              <h2 id="settings-modal-title" className="text-[16px] font-semibold text-text">General</h2>
 
               <div className="space-y-1">
                 <p className="text-[15px] font-medium text-text mb-3">Model</p>
@@ -301,6 +304,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
         <button
           onClick={() => onOpenChange(false)}
+          aria-label="Close settings"
           className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full border border-border text-text-muted hover:text-text transition-colors duration-150"
         >
           <X strokeWidth={1.5} className="h-4 w-4" />

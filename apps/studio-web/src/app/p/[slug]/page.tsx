@@ -163,7 +163,7 @@ function PasswordGate({ slug, onUnlock }: { slug: string; onUnlock: () => void }
             placeholder="Enter password"
             style={{ ...S.input, ...(error ? { borderColor: '#d32f2f' } : {}) }}
           />
-          <button type="button" onClick={() => setShowPwd((s) => !s)} style={S.eyeBtn}>
+          <button type="button" aria-label={showPwd ? 'Hide password' : 'Show password'} onClick={() => setShowPwd((s) => !s)} style={S.eyeBtn}>
             {showPwd ? <EyeOff size={14} strokeWidth={1.6} /> : <Eye size={14} strokeWidth={1.6} />}
           </button>
         </div>
@@ -191,7 +191,7 @@ function PasswordGate({ slug, onUnlock }: { slug: string; onUnlock: () => void }
 function LoadingScreen() {
   return (
     <div style={{ ...S.page, gap: '12px' }}>
-      <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2px solid #eaeaea', borderTopColor: '#686868', animation: 'spin .7s linear infinite' }} />
+      <div role="status" aria-label="Loading artifact" style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2px solid #eaeaea', borderTopColor: '#686868', animation: 'spin .7s linear infinite' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );

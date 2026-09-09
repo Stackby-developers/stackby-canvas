@@ -86,6 +86,8 @@ export function RunCard({ event, isLatest }: RunCardProps) {
         {/* Built step row */}
         <button
           onClick={() => setExpanded((o) => !o)}
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Collapse build details' : 'Expand build details'}
           style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             height: '48px', padding: '0 14px', borderRadius: '10px',
@@ -123,6 +125,7 @@ export function RunCard({ event, isLatest }: RunCardProps) {
     <div>
       <button
         onClick={() => hasDetail && setExpanded((o) => !o)}
+        aria-expanded={hasDetail ? expanded : undefined}
         style={{
           display: 'flex', alignItems: 'center', gap: '10px',
           height: '48px', padding: '0 14px', borderRadius: '10px',
