@@ -9,6 +9,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.17.0] — 2026-09-10
+
+### Added — Phase 4: performance hardening, security fixes, accessibility, eval harness
+
+#### Security hardening (`services/publish`)
+
+- **`serve-route.ts` — visibility enforcement**: the serve route now checks access before returning any HTML. Password-protected artifacts require an `__ap_{deploymentId}` cookie (set on success by the check-password route). Workspace/collaborator artifacts require a valid `__studio_session` JWT verified by `SessionManager`. Public/link artifacts are served freely. Returns 401 with a typed `reason` or 410 for unpublished.
+- **`check-password-route.ts` — rate limiting**: Redis-backed counter at `pwcheck_rate:{slug}:{ip}` — max 10 attempts per 15 minutes; 429 on breach; counter deleted on success. Sets `__ap_{deploymentId}` httpOnly cookie on correct password.
+- **`auth-start-route.ts` — open redirect fix**: `returnTo` is validated to start with `/`; any absolute URL is replaced with `'/'`.
+
+#### Performance hardening
+
+- **`serve-route.ts`**: public/link artifacts get `Cache-Control: public, max-age=60, s-maxage=3600, stale-while-revalidate=86400` + `CDN-Cache-Control: public, max-age=3600` + `ETag` on `activeVersionId` with 304 support. Private artifacts get `Cache-Control: private, no-store`.
+- **`apps/studio-web/next.config.mjs`**: Added `headers()` config — viewer pages (`/p/*`) get `public, max-age=30, s-maxage=300, stale-while-revalidate=3600`; app shell gets `private, no-store`; `/_next/static/*` gets `immutable, max-age=31536000`.
+
+#### Accessibility (WCAG 2.1 AA) — committed as `2adf4ab`
+
+10 component files updated: `builder-shell`, `follow-up-bar`, `run-card`, `prompt-composer`, `sidebar`, `settings-modal`, `color-editor`, `simple-token-editor`, `connect/page`, `p/[slug]/page`. Fixes: `aria-label` on all icon-only buttons, `aria-pressed` on toggle buttons, `aria-expanded`/`aria-controls` on collapsibles, `role="dialog"` + `aria-modal` + `aria-labelledby` on custom modals, `role="status"` + `aria-label` on loading spinners.
+
+#### Eval harness — 210 golden fixtures
+
+`services/orchestrator/src/__tests__/golden.test.ts` expanded from 8 fixtures and 4 smoke tests to **210 fixtures** across 10 domains (CRM, PM, HR, Finance, Marketing, Ops, E-commerce, Education, Healthcare, Edge) and **6 test suites**:
+1. Catalogue integrity — count ≥ 200, all prompts unique, all 8 artifact types covered, all 10 domains covered, realistic type distribution
+2. GenerationInput shape validation — 210 individual `it()` cases
+3. Intent keyword heuristics — regex signal coverage tests per type (dashboard, form, report, portal)
+4. Plan structural validation — well-formed/invalid shapes, all artifact types, all step types
+5. Intent structural validation — confidence bounds, capability enum, artifact type enum
+6. Workflow export smoke test — all 9 domains sampled
+
+---
+
 ## [0.16.0] — 2026-09-10
 
 ### Added — Custom domains, SSO viewer OAuth, Credits UI

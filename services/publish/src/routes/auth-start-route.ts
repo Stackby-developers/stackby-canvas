@@ -13,11 +13,12 @@ export function registerAuthStartRoute(
 ): void {
   app.get<{ Querystring: unknown }>('/auth/start', async (request, reply) => {
     const { returnTo } = QuerySchema.parse(request.query);
+    const safeReturnTo = returnTo && returnTo.startsWith('/') ? returnTo : '/';
     const pkce = generatePKCE();
 
     await redis.set(
       `pkce:${pkce.state}`,
-      JSON.stringify({ codeVerifier: pkce.codeVerifier, returnTo: returnTo ?? '/' }),
+      JSON.stringify({ codeVerifier: pkce.codeVerifier, returnTo: safeReturnTo }),
       'EX',
       600,
     );
