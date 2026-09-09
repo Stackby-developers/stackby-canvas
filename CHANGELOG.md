@@ -9,6 +9,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.14.0] — 2026-09-10
+
+### Added — S5 Published Runtime (`apps/studio-web` + `services/publish`)
+
+Public-facing viewer for deployed artifacts. Completes all 7 PRD surfaces.
+
+#### `services/publish` — two new routes
+
+- **`GET /publish/:slug/meta`** — returns deployment metadata (`slug`, `deploymentId`, `projectId`, `visibility`, `publishedAt`) as JSON; 404 if not found, 410 if unpublished. Used by the viewer to decide which gate to show without serving the full artifact.
+- **`POST /publish/:slug/check-password`** — accepts `{ password }`, returns `{ allowed: boolean }` after SHA-256 comparison against stored hash. Returns `allowed: true` immediately for non-password deployments.
+
+#### `apps/studio-web` — viewer page + API proxies
+
+- **`app/p/[slug]/page.tsx`** — public-facing viewer, outside the `(app)` route group (no sidebar, no auth guard). Five states:
+  - **Loading** — spinner while meta is fetched
+  - **Not found** (HTTP 404) — card with "Go to Studio" CTA
+  - **Unpublished** (HTTP 410) — "no longer available" card
+  - **Auth gate** (`workspace` / `stack_collaborators`) — sign-in card; links to `/connect?next=/p/{slug}` so auth redirects back after sign-in
+  - **Password gate** (`password`) — password form with show/hide toggle; validates via `/api/publish/:slug/check-password` before revealing iframe
+  - **Ready** (`public` / `link` / post-password-unlock) — full-viewport fixed iframe pointing at `PUBLISH_URL/serve/{slug}/`; forwards `camera`, `geolocation`, `clipboard-read`, `clipboard-write` permissions from deployment metadata
+- **`app/p/[slug]/layout.tsx`** — minimal HTML shell, no AppShell wrapper
+- **`(app)/api/publish/[slug]/meta/route.ts`** — GET proxy to publish service
+- **`(app)/api/publish/[slug]/check-password/route.ts`** — POST proxy to publish service
+- **`app/connect/page.tsx`** — now reads `?next=` search param; redirects to `next` after successful auth (defaults to `/`)
+
+---
+
 ## [0.13.0] — 2026-09-02
 
 ### Added — `apps/studio-web` (Canvas-style Builder UI) + `packages/ui`

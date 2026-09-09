@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, ExternalLink, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/src/hooks/use-auth';
 
@@ -35,6 +35,8 @@ const S: Record<string, React.CSSProperties> = {
 
 export default function ConnectPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') ?? '/';
   const { connect, isConnected, loading } = useAuth();
   const [step, setStep] = useState<'landing' | 'pat'>('landing');
   const [pat, setPat] = useState('');
@@ -45,8 +47,8 @@ export default function ConnectPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!loading && isConnected) router.replace('/');
-  }, [loading, isConnected, router]);
+    if (!loading && isConnected) router.replace(next);
+  }, [loading, isConnected, router, next]);
 
   useEffect(() => {
     if (step === 'pat') setTimeout(() => inputRef.current?.focus(), 50);
@@ -60,7 +62,7 @@ export default function ConnectPage() {
     const result = await connect(pat.trim());
     setConnecting(false);
     if (result.ok) {
-      router.replace('/');
+      router.replace(next);
     } else {
       setError(result.error ?? 'Could not connect. Check your token and try again.');
     }
