@@ -9,6 +9,45 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.15.0] — 2026-09-10
+
+### Added — Git export (`services/git` + `apps/studio-web`)
+
+Full GitHub/GitLab export flow surfaced in the builder. Covers first-time export to a new repo, export as a PR to an existing repo, and incremental push updates for already-linked projects.
+
+#### `services/git` — routes wired + new links lookup
+
+- **`src/index.ts`** — registered all six route handlers that were implemented but unwired: `install`, `export/new`, `export/existing`, `push/:linkId`, `sync/:linkId`, `policy`
+- **`src/routes/links-route.ts`** — new `GET /git/links/project/:projectId` endpoint; returns the most recent `RepoLink` for a project (404 → null in the Next.js proxy, so the frontend gets a clean null for unlinkd projects)
+
+#### `apps/studio-web` — five API proxy routes
+
+- `(app)/api/git/export/new` — POST
+- `(app)/api/git/export/existing` — POST
+- `(app)/api/git/links/[projectId]` — GET (maps 404 → `null` so the dialog doesn't need to handle HTTP errors)
+- `(app)/api/git/push/[linkId]` — POST
+- `(app)/api/git/sync/[linkId]` — GET
+
+#### `apps/studio-web` — `GitExportDialog` component
+
+`src/components/builder/git-export-dialog.tsx` — full dialog with five states:
+
+- **Loading** — fetches `GET /api/git/links/:projectId` on open
+- **No install** — shown via "No GitHub access?" link; prompts GitHub App install with external link + "I already installed it" bypass
+- **Unlinked** — two-tab layout:
+  - *New repository*: repo name (slug-validated `/^[a-z0-9-]{3,50}$/`), owner, provider radio (GitHub / GitLab), visibility radio (Private / Public); calls `POST /api/git/export/new`
+  - *Existing repository*: `owner/repo` path, new branch name, PR title; calls `POST /api/git/export/existing`
+- **Linked** — shows `repo (branch)` badge with inline sync check; commit message input, optional "Open PR" checkbox with PR title; calls `POST /api/git/push/:linkId`
+- **Success** — repo URL + "Open in GitHub/GitLab" button; PR link when applicable
+
+#### `apps/studio-web` — `BuilderShell` wired
+
+- Added `GitBranch` "Export" button to the builder header (between mode buttons and Publish)
+- `BuilderShell` accepts optional `artifactName`, `artifactType`, `stackId`, `stackName` props (fall back to plan data / defaults)
+- `GitExportDialog` mounted inside the shell, controlled by `gitOpen` state
+
+---
+
 ## [0.14.0] — 2026-09-10
 
 ### Added — S5 Published Runtime (`apps/studio-web` + `services/publish`)

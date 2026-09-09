@@ -1,0 +1,14 @@
+import { type NextRequest, NextResponse } from 'next/server';
+
+const GIT_URL = process.env['NEXT_PUBLIC_GIT_URL'] ?? 'http://localhost:3008';
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  const body: unknown = await req.json();
+  const res = await fetch(`${GIT_URL}/git/export/existing`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data: unknown = await res.json();
+  return NextResponse.json(data, { status: res.status });
+}

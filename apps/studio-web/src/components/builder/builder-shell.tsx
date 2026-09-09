@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { ChevronDown, Database, RotateCcw, Monitor, Code2, MessageSquare } from 'lucide-react';
+import { ChevronDown, Database, RotateCcw, Monitor, Code2, MessageSquare, GitBranch } from 'lucide-react';
 import { useRunEvents } from '@/src/hooks/use-run-events';
 import { RunFeed } from './run-feed';
 import { PreviewHost } from './preview-host';
 import { FollowUpBar } from './follow-up-bar';
 import { PropertiesRail } from './properties-rail';
 import { PublishPopover } from './publish-popover';
+import { GitExportDialog } from './git-export-dialog';
 import { Logo } from '@/src/components/layout/logo';
 
 interface PlanStep {
@@ -33,16 +34,22 @@ type BuilderView = 'preview' | 'code';
 interface BuilderShellProps {
   projectId: string;
   runId: string | null;
+  artifactName?: string;
+  artifactType?: string;
+  stackId?: string;
+  stackName?: string;
 }
 
-export function BuilderShell({ projectId, runId }: BuilderShellProps) {
+export function BuilderShell({ projectId, runId, artifactName = 'Untitled', artifactType = 'app', stackId: propStackId, stackName: propStackName }: BuilderShellProps) {
   const { events, phase, sendSignal } = useRunEvents(runId);
   const [view, setView] = useState<BuilderView>('preview');
   const [showRail, setShowRail] = useState(false);
+  const [gitOpen, setGitOpen] = useState(false);
 
   const planEvent = [...events].reverse().find((e) => e.type === 'plan');
   const plan = planEvent ? (planEvent.data as unknown as Plan) : null;
-  const stackId = plan?.stackId ?? '';
+  const stackId = propStackId ?? plan?.stackId ?? '';
+  const stackName = propStackName ?? stackId;
 
   function handleFollowUp(p: string) {
     console.warn('Follow-up not yet implemented:', p);
@@ -135,6 +142,22 @@ export function BuilderShell({ projectId, runId }: BuilderShellProps) {
             ))}
           </div>
 
+          {/* Git export */}
+          <button
+            onClick={() => setGitOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              height: '38px', padding: '0 12px', borderRadius: '8px',
+              fontSize: '15px', border: '1px solid transparent',
+              background: 'transparent', color: '#EDEDED', cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+            title="Export to Git"
+          >
+            <GitBranch strokeWidth={1.6} style={{ width: '16px', height: '16px' }} />
+            Export
+          </button>
+
           {/* Publish button: white bg, black text */}
           <div style={{ position: 'relative' }}>
             <PublishPopover
@@ -169,6 +192,16 @@ export function BuilderShell({ projectId, runId }: BuilderShellProps) {
           <PropertiesRail projectId={projectId} runId={runId} events={events} phase={phase} />
         )}
       </div>
+
+      <GitExportDialog
+        open={gitOpen}
+        onOpenChange={setGitOpen}
+        projectId={projectId}
+        artifactName={artifactName}
+        artifactType={artifactType}
+        stackId={stackId}
+        stackName={stackName}
+      />
     </div>
   );
 }
