@@ -1,0 +1,195 @@
+{
+  "name": "Stackby Studio",
+  "version": "1.0.0",
+  "label": "Stackby Studio",
+  "description": "Build and manage AI-powered apps from your Stackby data.",
+  "baseUrl": "https://api.studio.stackby.com",
+  "connection": {
+    "label": "Stackby Studio API Key",
+    "type": "apiKey",
+    "input": {
+      "type": "form",
+      "fields": [
+        { "name": "apiUrl",      "label": "API URL",      "type": "url",      "required": true,  "default": "https://api.studio.stackby.com" },
+        { "name": "apiKey",      "label": "API Key",      "type": "password", "required": true },
+        { "name": "workspaceId", "label": "Workspace ID", "type": "text",     "required": true }
+      ]
+    },
+    "communication": {
+      "url": "{{connection.apiUrl}}/health",
+      "headers": { "Authorization": "Bearer {{connection.apiKey}}" },
+      "response": { "valid": "{{statusCode === 200}}" }
+    }
+  },
+  "modules": [
+    {
+      "name": "WatchArtifactPublished",
+      "label": "Watch Artifact Published",
+      "type": "trigger",
+      "description": "Triggers whenever an artifact is published or redeployed.",
+      "webhook": {
+        "register": {
+          "url": "{{connection.apiUrl}}/v1/webhooks",
+          "method": "POST",
+          "headers": { "Authorization": "Bearer {{connection.apiKey}}", "Content-Type": "application/json" },
+          "body": {
+            "url": "{{webhook.url}}",
+            "events": ["artifact.published"],
+            "workspaceId": "{{connection.workspaceId}}",
+            "createdByUserId": "make-integration",
+            "description": "Make: artifact.published"
+          }
+        },
+        "unregister": {
+          "url": "{{connection.apiUrl}}/v1/webhooks/{{webhook.id}}",
+          "method": "DELETE",
+          "headers": { "Authorization": "Bearer {{connection.apiKey}}" },
+          "qs": { "workspaceId": "{{connection.workspaceId}}" }
+        }
+      },
+      "output": [
+        { "name": "deploymentId", "label": "Deployment ID",  "type": "text" },
+        { "name": "projectId",    "label": "Project ID",     "type": "text" },
+        { "name": "slug",         "label": "URL Slug",       "type": "text" },
+        { "name": "visibility",   "label": "Visibility",     "type": "text" },
+        { "name": "previewUrl",   "label": "Preview URL",    "type": "url"  },
+        { "name": "publishedAt",  "label": "Published At",   "type": "date" }
+      ],
+      "sampleOutput": {
+        "deploymentId": "dep_sample123",
+        "projectId": "proj_sample123",
+        "slug": "my-dashboard",
+        "visibility": "link",
+        "previewUrl": "https://my-dashboard.studio.stackby.com",
+        "publishedAt": "2026-09-13T10:00:00.000Z"
+      }
+    },
+    {
+      "name": "WatchRunCompleted",
+      "label": "Watch Build Run Completed",
+      "type": "trigger",
+      "description": "Triggers when a Studio build run finishes successfully.",
+      "webhook": {
+        "register": {
+          "url": "{{connection.apiUrl}}/v1/webhooks",
+          "method": "POST",
+          "headers": { "Authorization": "Bearer {{connection.apiKey}}", "Content-Type": "application/json" },
+          "body": {
+            "url": "{{webhook.url}}",
+            "events": ["run.completed"],
+            "workspaceId": "{{connection.workspaceId}}",
+            "createdByUserId": "make-integration",
+            "description": "Make: run.completed"
+          }
+        },
+        "unregister": {
+          "url": "{{connection.apiUrl}}/v1/webhooks/{{webhook.id}}",
+          "method": "DELETE",
+          "headers": { "Authorization": "Bearer {{connection.apiKey}}" },
+          "qs": { "workspaceId": "{{connection.workspaceId}}" }
+        }
+      },
+      "output": [
+        { "name": "runId",        "label": "Run ID",          "type": "text" },
+        { "name": "projectId",    "label": "Project ID",      "type": "text" },
+        { "name": "artifactType", "label": "Artifact Type",   "type": "text" },
+        { "name": "prompt",       "label": "Original Prompt", "type": "text" },
+        { "name": "completedAt",  "label": "Completed At",    "type": "date" }
+      ],
+      "sampleOutput": {
+        "runId": "run_sample123",
+        "projectId": "proj_sample123",
+        "artifactType": "dashboard",
+        "prompt": "Build a sales dashboard",
+        "completedAt": "2026-09-13T10:05:00.000Z"
+      }
+    },
+    {
+      "name": "WatchRunFailed",
+      "label": "Watch Build Run Failed",
+      "type": "trigger",
+      "description": "Triggers when a Studio build run fails after all retries.",
+      "webhook": {
+        "register": {
+          "url": "{{connection.apiUrl}}/v1/webhooks",
+          "method": "POST",
+          "headers": { "Authorization": "Bearer {{connection.apiKey}}", "Content-Type": "application/json" },
+          "body": {
+            "url": "{{webhook.url}}",
+            "events": ["run.failed"],
+            "workspaceId": "{{connection.workspaceId}}",
+            "createdByUserId": "make-integration",
+            "description": "Make: run.failed"
+          }
+        },
+        "unregister": {
+          "url": "{{connection.apiUrl}}/v1/webhooks/{{webhook.id}}",
+          "method": "DELETE",
+          "headers": { "Authorization": "Bearer {{connection.apiKey}}" },
+          "qs": { "workspaceId": "{{connection.workspaceId}}" }
+        }
+      },
+      "output": [
+        { "name": "runId",       "label": "Run ID",       "type": "text" },
+        { "name": "projectId",   "label": "Project ID",   "type": "text" },
+        { "name": "errorPhase",  "label": "Failed Phase", "type": "text" },
+        { "name": "failedAt",    "label": "Failed At",    "type": "date" }
+      ],
+      "sampleOutput": {
+        "runId": "run_sample",
+        "projectId": "proj_sample",
+        "errorPhase": "build",
+        "failedAt": "2026-09-13T10:05:00.000Z"
+      }
+    },
+    {
+      "name": "CreateProject",
+      "label": "Create Project",
+      "type": "action",
+      "description": "Creates a new Stackby Studio project and starts a build run.",
+      "connection": true,
+      "request": {
+        "url": "{{connection.apiUrl}}/v1/projects",
+        "method": "POST",
+        "headers": { "Authorization": "Bearer {{connection.apiKey}}", "Content-Type": "application/json" },
+        "body": {
+          "workspaceId": "{{connection.workspaceId}}",
+          "stackId": "{{parameters.stackId}}",
+          "prompt": "{{parameters.prompt}}",
+          "artifactType": "{{parameters.artifactType}}",
+          "name": "{{parameters.name}}"
+        }
+      },
+      "parameters": [
+        { "name": "prompt",       "label": "Prompt",        "type": "text",   "required": true },
+        { "name": "stackId",      "label": "Stack ID",      "type": "text",   "required": true },
+        { "name": "artifactType", "label": "Artifact Type", "type": "select", "required": true,
+          "options": ["dashboard","portal","report","form","gallery","website","document","presentation"] },
+        { "name": "name",         "label": "Project Name",  "type": "text",   "required": false }
+      ],
+      "output": [
+        { "name": "id",     "label": "Project ID", "type": "text" },
+        { "name": "runId",  "label": "Run ID",     "type": "text" },
+        { "name": "name",   "label": "Name",       "type": "text" },
+        { "name": "status", "label": "Status",     "type": "text" }
+      ]
+    },
+    {
+      "name": "ListWebhooks",
+      "label": "List Webhooks",
+      "type": "action",
+      "description": "Returns all active webhook subscriptions for your workspace.",
+      "connection": true,
+      "request": {
+        "url": "{{connection.apiUrl}}/v1/webhooks",
+        "method": "GET",
+        "headers": { "Authorization": "Bearer {{connection.apiKey}}" },
+        "qs": { "workspaceId": "{{connection.workspaceId}}" }
+      },
+      "parameters": [],
+      "output": [
+        { "name": "webhooks", "label": "Webhooks", "type": "array" }
+      ]
+    }
+  ]
+}

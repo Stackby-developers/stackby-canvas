@@ -20,7 +20,7 @@ interface DeploymentMeta {
 
 const S: Record<string, React.CSSProperties> = {
   page: { minHeight: '100dvh', background: '#fafafa', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' },
-  card: { width: '400px', maxWidth: '100%', background: '#fff', border: '1px solid #eaeaea', borderRadius: '8px', padding: '40px', boxShadow: '0 2px 8px rgba(0,0,0,.06), 0 0 1px rgba(0,0,0,.04)' },
+  card: { background: '#fff', border: '1px solid #eaeaea', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,.06), 0 0 1px rgba(0,0,0,.04)' },
   logoWrap: { display: 'flex', justifyContent: 'center', marginBottom: '14px' },
   heading: { textAlign: 'center', fontSize: '16px', fontWeight: 600, color: '#202020', letterSpacing: '-.01em', margin: '0 0 6px' } as React.CSSProperties,
   sub: { textAlign: 'center', fontSize: '13px', color: '#686868', margin: '0 0 24px', lineHeight: 1.5 } as React.CSSProperties,
@@ -46,14 +46,14 @@ function Spinner() {
 function GateCard({ children }: { children: React.ReactNode }) {
   return (
     <div style={S.page}>
-      <div style={S.card}>{children}</div>
+      <div className="gate-card" style={S.card}>{children}</div>
       <p style={S.footer}>
         Powered by{' '}
         <a href="https://stackby.com" target="_blank" rel="noopener noreferrer" style={S.footerLink}>
           Stackby Studio
         </a>
       </p>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} input::placeholder{color:#c8c8c8} input:focus{border-color:#202020!important}`}</style>
+      <style>{`input::placeholder{color:#c8c8c8} input:focus{border-color:#202020!important}`}</style>
     </div>
   );
 }
@@ -192,7 +192,6 @@ function LoadingScreen() {
   return (
     <div style={{ ...S.page, gap: '12px' }}>
       <div role="status" aria-label="Loading artifact" style={{ width: '20px', height: '20px', borderRadius: '50%', border: '2px solid #eaeaea', borderTopColor: '#686868', animation: 'spin .7s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }

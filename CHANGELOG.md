@@ -9,6 +9,46 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.0] — 2026-09-13
+
+### Added — Phase 5: mobile-responsive viewer + partner integrations (Zapier, Make)
+
+#### Mobile-responsive published runtime hardening
+
+- **`app/p/[slug]/layout.tsx`** — added `<Viewport>` export (`width=device-width, initial-scale=1, viewport-fit=cover`), responsive CSS in `<style>`: `.gate-card` uses `max-width: calc(100vw - 32px)` with padding stepping down at 480px and 360px breakpoints; `@media(hover:none)` sets `min-height: 44px` on touch targets; `@keyframes spin` moved to layout to avoid duplicates in child components
+- **`app/p/[slug]/page.tsx`** — gate card now applies `.gate-card` class (responsive padding from layout CSS) while keeping the inline box-shadow/border; `LoadingScreen` uses single spinner without redundant `@keyframes` injection
+
+#### Webhook infrastructure (`apps/api` + `infra/db`) — committed `da921c5`
+
+- **`infra/db/migrations/0004_webhooks.sql`** — `webhook_subscriptions` table (RLS-isolated, GIN index on `events[]`, failure tracking) + `webhook_deliveries` table (per-attempt log for debugging and SOC 2 evidence)
+- **`apps/api/src/webhooks/dispatcher.ts`** — `dispatchEvent(pool, eventName, workspaceId, payload)`: queries active subscriptions, signs each delivery with `X-Stackby-Signature: sha256=<HMAC>`, retries 3× (0ms / 1s / 5s), fire-and-forget, auto-disables subscriptions after 10 consecutive failures
+- **`apps/api/src/webhooks/publish.ts`** — `dispatchArtifactPublished()` helper
+- **CRUD routes** — `POST /v1/webhooks` (creates subscription, returns 32-byte secret once), `GET /v1/webhooks`, `DELETE /v1/webhooks/:id`, `GET /v1/webhooks/:id/deliveries`
+- **Events fired** — `run.started` from `projects/create.ts`; `artifact.unpublished` from `admin/force-unpublish.ts`
+- **Next.js proxy routes** — `(app)/api/webhooks/` (list + create), `[id]/` (delete), `[id]/deliveries/` (list)
+
+#### Zapier integration (`integrations/zapier/`)
+
+Zapier CLI app deployable to the Zapier Developer Platform:
+- **Triggers** — `artifact.published`, `run.completed`, `run.failed` (all webhook-subscription-based)
+- **Actions** — `create_project` (POST /v1/projects)
+- **Auth** — custom API key with `apiUrl`, `apiKey`, `workspaceId`, `userId` fields; `beforeRequest` hook injects `Authorization: Bearer` header
+- `index.js`, `package.json`, `triggers/`, `creates/` — ready for `zapier push`
+
+#### Make integration (`integrations/make/blueprint.json`)
+
+Make (Integromat) app blueprint with 5 modules:
+- **Triggers** — `WatchArtifactPublished`, `WatchRunCompleted`, `WatchRunFailed` (webhook register/unregister)
+- **Actions** — `CreateProject`, `ListWebhooks`
+- Connection uses API key Bearer auth with test against `/health`
+
+#### Webhooks admin tab (`apps/studio-web`)
+
+- **`components/admin/webhooks-tab.tsx`** — full UI for managing webhook subscriptions: list with status indicator + failure count + event badges; "Add webhook" dialog (URL, event checkboxes, description); secret reveal dialog (shown once, copy-to-clipboard); deliveries log dialog (per-attempt status, HTTP code, duration, timestamp); signature verification code snippet; links to Zapier/Make integrations
+- **`components/admin/admin-console.tsx`** — added "Webhooks" tab
+
+---
+
 ## [1.0.0] — 2026-09-13
 
 ### canvas-frontend → main — Phase 4 GA Prep complete

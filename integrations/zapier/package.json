@@ -1,0 +1,19 @@
+{
+  "name": "stackby-studio-zapier",
+  "version": "1.0.0",
+  "description": "Zapier integration for Stackby Studio",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --testPathPattern=test/",
+    "validate": "zapier validate",
+    "push": "zapier push",
+    "deploy": "zapier promote"
+  },
+  "dependencies": {
+    "zapier-platform-core": "15.5.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": { "node": ">=18" }
+}

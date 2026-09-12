@@ -6,6 +6,7 @@ import { CreditsTab } from './credits-tab';
 import { ArtifactsTab } from './artifacts-tab';
 import { PolicyTab } from './policy-tab';
 import { AuditTab } from './audit-tab';
+import { WebhooksTab } from './webhooks-tab';
 
 export function AdminConsole() {
   return (
@@ -24,6 +25,7 @@ export function AdminConsole() {
           <TabsTrigger value="artifacts">Artifacts</TabsTrigger>
           <TabsTrigger value="policy">Policy</TabsTrigger>
           <TabsTrigger value="audit">Audit Log</TabsTrigger>
+          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
         </TabsList>
         <TabsContent value="credits" className="mt-6">
           <CreditsTab />
@@ -36,6 +38,9 @@ export function AdminConsole() {
         </TabsContent>
         <TabsContent value="audit" className="mt-6">
           <AuditTab />
+        </TabsContent>
+        <TabsContent value="webhooks" className="mt-6">
+          <WebhooksTab />
         </TabsContent>
       </Tabs>
     </div>
