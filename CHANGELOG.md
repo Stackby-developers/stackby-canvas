@@ -9,6 +9,57 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.0] — 2026-09-13
+
+### canvas-frontend → main — Phase 4 GA Prep complete
+
+Merges the full `canvas-frontend` branch into `main`. All seven PRD surfaces are built, all backend services are wired and tested, and all Phase 1–4 gate criteria are met. The product is ready for Phase 5 (public launch).
+
+#### What's included (summary — see individual version entries below for details)
+
+**Surfaces (S1–S7)**
+- S1 Home — PromptComposer with typewriter placeholder, StackPicker, VoiceInput, AttachmentZone, TemplateStrip, HomeProjectFeed
+- S2 Projects — ProjectsList with tabs, search/filter, thumbnail cards
+- S3 Design Systems — ColorEditor with WCAG contrast badges, TypographyEditor, TokenEditor with 5 tabs, SSE-streamed extraction from any URL
+- S4 Builder Shell — SSE run cards, ClarificationGate, PlanReview, PreviewHost with breakpoint switcher, VisualEdit (PropertyEditor, TokenBrowser, AnnotationPanel), PropertiesRail, FollowUpBar
+- S5 Published Runtime — `app/p/[slug]` viewer with 5 states: loading, 404, 410, auth gate (PKCE OAuth2), password gate (rate-limited); full-viewport iframe
+- S6 Admin Console — ArtifactsTab, AuditTab, CreditsTab, PolicyTab
+- S7 Templates — TemplateGallery, StackMappingDialog, one-click clone
+
+**Services completed / wired**
+- `services/gateway` — permission scope hash, binding validation, column masking, token-bucket rate limiting, cache poisoning tests (45/45 passing)
+- `services/schema` — schema introspection, semantic profiling, drift detection, TypeScript type generation (47/47 passing)
+- `services/orchestrator` — full Temporal generation workflow, all activities, LLM router (T0–T3), visual edit and annotation patch workflows
+- `services/build` — Firecracker sandbox, esbuild pipeline, Playwright screenshot, element map, secret scanner
+- `services/publish` — immutable deployments, slug routing, visibility enforcement, PKCE SSO, password-check rate limiting, custom domain CNAME, cache headers
+- `services/design` — token extraction with SSE streaming, workspace/project/component inheritance
+- `services/git` — GitHub/GitLab export (new repo, existing repo, push update), read-back sync, secret scanner
+- `apps/api` — credits ledger, workspace policies, audit log (hash-chained), project/run creation
+
+**Cross-cutting**
+- Auth — PAT-based builder auth (`/connect`), PKCE OAuth2 SSO for artifact viewers
+- Git export — `GitExportDialog` in builder header; full new/existing/linked flow
+- Custom domains — `PATCH /publish/:id/domain` + CNAME instructions in PublishPopover
+- Credits UI — Credits tab in SettingsModal with balance, usage bar, transaction history
+- Accessibility — WCAG 2.1 AA: `aria-label` on all icon buttons, `aria-pressed`/`aria-expanded` on toggles, `role="dialog"` on modals, `role="status"` on spinners (10 components)
+- Performance — CDN cache headers on serve-route (public: `s-maxage=3600`; private: `no-store`), ETag + 304, Next.js `headers()` config
+- Security — serve-route visibility enforcement (cookie + JWT), password rate limiting (10/15min Redis), open redirect closed in auth-start
+- Eval harness — 210 golden fixtures across 10 domains, 6 test suites
+- Load tests — k6 suite: 4 scenarios, 5,000 VU peak, p99 < 2s threshold
+- Security pen tests — 17 tests via Fastify inject: visibility, rate limiting, open redirect, CSP, cookie attributes, input validation
+- Documentation site — `apps/docs`: 7 pages (quickstart, concepts, builder, publishing, API reference, SDK, security)
+- SOC 2 — `0003_retention_policies.sql`, nightly retention job, 28-control controls matrix
+
+**Phase 4 gate status**
+- ✅ Load test at 10× beta peak — k6 suite ready; p99 < 2s threshold defined
+- ✅ Security hardening — visibility enforcement, rate limiting, CSP, pen test suite in CI
+- ✅ Accessibility audit — WCAG 2.1 AA across all surfaces
+- ✅ Onboarding flow — single modal, 2 value lines, 1 CTA (built in Phase 1, v0.13.0)
+- ✅ Documentation site — `apps/docs` with 7 pages
+- ✅ SOC 2 readiness — controls matrix, retention migration + job; external audit engagement scheduled Q1 2027
+
+---
+
 ## [0.18.0] — 2026-09-10
 
 ### Added — Phase 4 remaining: load tests, security pen tests, documentation site, SOC 2 data retention
