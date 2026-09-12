@@ -14,6 +14,10 @@ import { registerUsageRoute } from './routes/admin/usage.js';
 import { registerCreateProjectRoute } from './routes/projects/create.js';
 import { registerListProjectsRoute } from './routes/projects/list.js';
 import { registerAuthConnectRoute } from './routes/auth/connect.js';
+import { registerWebhookCreateRoute } from './routes/webhooks/create.js';
+import { registerWebhookListRoute } from './routes/webhooks/list.js';
+import { registerWebhookDeleteRoute } from './routes/webhooks/delete.js';
+import { registerWebhookDeliveriesRoute } from './routes/webhooks/deliveries.js';
 
 const config = loadConfig();
 const pool = new pg.Pool({ connectionString: config.DATABASE_URL });
@@ -39,6 +43,10 @@ registerUsageRoute(app, pool);
 registerCreateProjectRoute(app, pool, config);
 registerListProjectsRoute(app, pool);
 registerAuthConnectRoute(app);
+registerWebhookCreateRoute(app, pool);
+registerWebhookListRoute(app, pool);
+registerWebhookDeleteRoute(app, pool);
+registerWebhookDeliveriesRoute(app, pool);
 
 const start = async () => {
   await app.listen({ port: config.PORT, host: '0.0.0.0' });

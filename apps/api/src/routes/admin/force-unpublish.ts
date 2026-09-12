@@ -5,6 +5,7 @@ import { request as httpRequest } from 'undici';
 import type { Config } from '../../config.js';
 import { AuditLog } from '../../audit/chain.js';
 import { randomUUID } from 'node:crypto';
+import { dispatchEvent } from '../../webhooks/dispatcher.js';
 
 const B = z.object({ workspaceId: z.string(), adminId: z.string().default('admin'), reason: z.string().optional() });
 
@@ -30,6 +31,11 @@ export function registerForceUnpublishRoute(app: FastifyInstance, pool: Pool, co
       resourceId: id,
       metadata: { reason: body.reason ?? 'Admin action', propagationTargetMs: 60_000 },
       createdAt: new Date(),
+    });
+
+    void dispatchEvent(pool, 'artifact.unpublished', body.workspaceId, {
+      deploymentId: id,
+      reason: 'admin_force',
     });
 
     return reply.send({ forceUnpublished: true, propagationMs: 60_000 });

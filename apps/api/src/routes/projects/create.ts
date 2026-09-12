@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import type { FastifyInstance } from 'fastify';
 import type { Pool } from 'pg';
 import type { Config } from '../../config.js';
+import { dispatchEvent } from '../../webhooks/dispatcher.js';
 
 const CreateProjectBodySchema = z.object({
   workspaceId: z.string().uuid(),
@@ -71,6 +72,13 @@ export function registerCreateProjectRoute(
     } catch (err) {
       app.log.error({ err }, 'Failed to reach orchestrator — run remains pending');
     }
+
+    void dispatchEvent(pool, 'run.started', body.workspaceId, {
+      projectId,
+      runId,
+      prompt: body.prompt,
+      artifactType: body.artifactType,
+    });
 
     return reply.status(201).send({ projectId, runId });
   });
