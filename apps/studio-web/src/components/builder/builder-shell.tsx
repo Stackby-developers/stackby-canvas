@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { ChevronDown, Database, RotateCcw, Monitor, Code2, MessageSquare } from 'lucide-react';
+import { ChevronDown, Database, RotateCcw, Monitor, Code2, MessageSquare, GitBranch } from 'lucide-react';
 import { useRunEvents } from '@/src/hooks/use-run-events';
 import { RunFeed } from './run-feed';
 import { PreviewHost } from './preview-host';
 import { FollowUpBar } from './follow-up-bar';
 import { PropertiesRail } from './properties-rail';
 import { PublishPopover } from './publish-popover';
+import { GitExportDialog } from './git-export-dialog';
 import { Logo } from '@/src/components/layout/logo';
 
 interface PlanStep {
@@ -33,16 +34,22 @@ type BuilderView = 'preview' | 'code';
 interface BuilderShellProps {
   projectId: string;
   runId: string | null;
+  artifactName?: string;
+  artifactType?: string;
+  stackId?: string;
+  stackName?: string;
 }
 
-export function BuilderShell({ projectId, runId }: BuilderShellProps) {
+export function BuilderShell({ projectId, runId, artifactName = 'Untitled', artifactType = 'app', stackId: propStackId, stackName: propStackName }: BuilderShellProps) {
   const { events, phase, sendSignal } = useRunEvents(runId);
   const [view, setView] = useState<BuilderView>('preview');
   const [showRail, setShowRail] = useState(false);
+  const [gitOpen, setGitOpen] = useState(false);
 
   const planEvent = [...events].reverse().find((e) => e.type === 'plan');
   const plan = planEvent ? (planEvent.data as unknown as Plan) : null;
-  const stackId = plan?.stackId ?? '';
+  const stackId = propStackId ?? plan?.stackId ?? '';
+  const stackName = propStackName ?? stackId;
 
   function handleFollowUp(p: string) {
     console.warn('Follow-up not yet implemented:', p);
@@ -75,7 +82,8 @@ export function BuilderShell({ projectId, runId }: BuilderShellProps) {
         <button
           onClick={() => setShowRail((o) => !o)}
           className="rounded-[6px] p-1.5 text-text-muted hover:bg-surface hover:text-text transition-colors duration-150"
-          title="Toggle properties panel"
+          aria-label="Toggle properties panel"
+          aria-pressed={showRail}
         >
           <svg
             className="h-4 w-4"
@@ -100,7 +108,7 @@ export function BuilderShell({ projectId, runId }: BuilderShellProps) {
             <span style={{ color: '#fff', fontSize: '15px', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {stackId || 'Select a base'}
             </span>
-            <button style={{ color: '#8A8A8A', display: 'flex', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <button aria-label="Reconnect to base" style={{ color: '#8A8A8A', display: 'flex', background: 'none', border: 'none', cursor: 'pointer' }}>
               <RotateCcw strokeWidth={1.6} style={{ width: '14px', height: '14px' }} />
             </button>
           </div>
@@ -116,6 +124,7 @@ export function BuilderShell({ projectId, runId }: BuilderShellProps) {
             ] as const).map(({ id, Icon, label, extra }) => (
               <button
                 key={id}
+                aria-pressed={view === id}
                 onClick={() => setView(id === 'annotate' ? 'preview' : (id as BuilderView))}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px',
@@ -134,6 +143,22 @@ export function BuilderShell({ projectId, runId }: BuilderShellProps) {
               </button>
             ))}
           </div>
+
+          {/* Git export */}
+          <button
+            onClick={() => setGitOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              height: '38px', padding: '0 12px', borderRadius: '8px',
+              fontSize: '15px', border: '1px solid transparent',
+              background: 'transparent', color: '#EDEDED', cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+            title="Export to Git"
+          >
+            <GitBranch strokeWidth={1.6} style={{ width: '16px', height: '16px' }} />
+            Export
+          </button>
 
           {/* Publish button: white bg, black text */}
           <div style={{ position: 'relative' }}>
@@ -169,6 +194,16 @@ export function BuilderShell({ projectId, runId }: BuilderShellProps) {
           <PropertiesRail projectId={projectId} runId={runId} events={events} phase={phase} />
         )}
       </div>
+
+      <GitExportDialog
+        open={gitOpen}
+        onOpenChange={setGitOpen}
+        projectId={projectId}
+        artifactName={artifactName}
+        artifactType={artifactType}
+        stackId={stackId}
+        stackName={stackName}
+      />
     </div>
   );
 }

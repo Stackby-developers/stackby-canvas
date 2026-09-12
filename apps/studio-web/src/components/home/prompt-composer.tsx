@@ -104,7 +104,7 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
                 style={{ display: 'flex', alignItems: 'center', gap: '4px', borderRadius: '999px', border: '1px solid #3A3A3A', background: '#282828', padding: '4px 10px', fontSize: '13px', color: '#EDEDED' }}
               >
                 <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
-                <button type="button" onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))} style={{ color: '#8A8A8A', marginLeft: '4px' }}>×</button>
+                <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))} style={{ color: '#8A8A8A', marginLeft: '4px' }}>×</button>
               </div>
             ))}
           </div>
@@ -115,6 +115,7 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
           {/* + button */}
           <button
             type="button"
+            aria-label="Attach files"
             onClick={() => fileInputRef.current?.click()}
             style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #363636', background: '#232323', display: 'grid', placeItems: 'center', flexShrink: 0, cursor: 'pointer' }}
           >
@@ -176,6 +177,7 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
           {/* Send */}
           <button
             type="button"
+            aria-label={submitting ? 'Submitting…' : 'Submit prompt'}
             onClick={() => void handleSubmit()}
             disabled={!canSubmit}
             style={{
@@ -187,7 +189,7 @@ export function PromptComposer({ recentStacks = [] }: PromptComposerProps) {
             }}
           >
             {submitting
-              ? <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: `2px solid ${hasText ? '#111' : '#8A8A8A'}`, borderTopColor: 'transparent', animation: 'spin 0.75s linear infinite' }} />
+              ? <div role="status" aria-label="Submitting" style={{ width: '14px', height: '14px', borderRadius: '50%', border: `2px solid ${hasText ? '#111' : '#8A8A8A'}`, borderTopColor: 'transparent', animation: 'spin 0.75s linear infinite' }} />
               : <ArrowUp strokeWidth={2} style={{ width: '16px', height: '16px', color: hasText ? '#111' : '#8A8A8A' }} />}
           </button>
         </div>

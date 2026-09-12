@@ -11,6 +11,10 @@ import { registerAuthCallbackRoute } from './routes/auth-callback.js';
 import { registerDeepLinkRoute } from './routes/deep-link.js';
 import { registerAdminRoute } from './routes/admin-route.js';
 import { registerVersionsRoute } from './routes/versions-route.js';
+import { registerMetaRoute } from './routes/meta-route.js';
+import { registerCheckPasswordRoute } from './routes/check-password-route.js';
+import { registerCustomDomainRoute } from './routes/custom-domain-route.js';
+import { registerAuthStartRoute } from './routes/auth-start-route.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.NODE_ENV === 'test' ? 'silent' : 'info' } });
@@ -30,6 +34,10 @@ registerAuthCallbackRoute(app, redis, config);
 registerDeepLinkRoute(app);
 registerAdminRoute(app, pool, redis);
 registerVersionsRoute(app, pool);
+registerMetaRoute(app, pool, redis);
+registerCheckPasswordRoute(app, pool, redis);
+registerCustomDomainRoute(app, pool, redis);
+registerAuthStartRoute(app, redis, config);
 
 const start = async () => {
   await redis.connect();

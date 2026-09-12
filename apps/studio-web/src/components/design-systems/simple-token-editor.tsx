@@ -57,6 +57,7 @@ export function SimpleTokenEditor({ label, tokens, onChange, placeholder }: Simp
             size="icon"
             className="h-7 w-7 shrink-0 text-text-faint hover:text-destructive"
             onClick={() => remove(key)}
+            aria-label={`Remove ${key}`}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

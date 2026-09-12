@@ -75,6 +75,7 @@ export function ColorEditor({ colors, onChange }: ColorEditorProps) {
               size="icon"
               className="h-7 w-7 text-text-faint hover:text-destructive"
               onClick={() => remove(key)}
+              aria-label={`Remove color ${key}`}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>

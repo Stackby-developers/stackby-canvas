@@ -99,6 +99,13 @@ export class DeploymentStore {
     );
   }
 
+  async setCustomDomain(deploymentId: string, domain: string | null): Promise<void> {
+    await this.pool.query(
+      `UPDATE deployments SET custom_domain=$1 WHERE id=$2`,
+      [domain, deploymentId],
+    );
+  }
+
   async unpublish(deploymentId: string, byUserId: string): Promise<void> {
     await this.pool.query(
       `UPDATE deployments SET unpublished_at=NOW(), unpublished_by=$1 WHERE id=$2`,

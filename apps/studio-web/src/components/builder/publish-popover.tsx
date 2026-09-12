@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Rocket, Copy, Check, ExternalLink, AlertTriangle, ChevronLeft } from 'lucide-react';
+import { Rocket, Copy, Check, ExternalLink, AlertTriangle, ChevronLeft, Globe, Loader2 } from 'lucide-react';
 import {
   Popover, PopoverTrigger, PopoverContent,
   Button, Input, Badge, Tooltip, TooltipTrigger, TooltipContent,
@@ -62,6 +62,10 @@ export function PublishPopover({ projectId, runId, plan, isReady }: PublishPopov
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PublishResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const [customDomain, setCustomDomain] = useState('');
+  const [domainSaving, setDomainSaving] = useState(false);
+  const [domainSaved, setDomainSaved] = useState(false);
+  const [domainError, setDomainError] = useState<string | null>(null);
 
   const tables = [...new Set(plan?.steps.flatMap((s) => s.tables) ?? [])];
   const columns = [...new Set(plan?.steps.flatMap((s) => s.columns) ?? [])];
@@ -75,6 +79,32 @@ export function PublishPopover({ projectId, runId, plan, isReady }: PublishPopov
     setError(null);
     setResult(null);
     setCopied(false);
+    setCustomDomain('');
+    setDomainSaved(false);
+    setDomainError(null);
+  }
+
+  async function handleSaveDomain() {
+    if (!result || !customDomain.trim()) return;
+    setDomainSaving(true);
+    setDomainError(null);
+    setDomainSaved(false);
+    try {
+      const res = await fetch(`/api/publish/${result.deploymentId}/domain`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: customDomain.trim() || null }),
+      });
+      if (!res.ok) {
+        const err = (await res.json()) as { error?: string };
+        throw new Error(err.error ?? 'Failed to save domain');
+      }
+      setDomainSaved(true);
+    } catch (err) {
+      setDomainError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setDomainSaving(false);
+    }
   }
 
   async function handlePublish() {
@@ -340,6 +370,36 @@ export function PublishPopover({ projectId, runId, plan, isReady }: PublishPopov
                 activeVersionId={result.versionId}
                 onRollback={handleRollback}
               />
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5 text-text-muted" />
+                <p className="text-xs font-medium text-text-muted">Custom domain</p>
+              </div>
+              <div className="flex gap-1.5">
+                <Input
+                  value={customDomain}
+                  onChange={(e) => { setCustomDomain(e.target.value); setDomainSaved(false); setDomainError(null); }}
+                  placeholder="app.yourcompany.com"
+                  className="h-7 text-xs font-mono flex-1"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs shrink-0"
+                  onClick={() => void handleSaveDomain()}
+                  disabled={!customDomain.trim() || domainSaving}
+                >
+                  {domainSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : domainSaved ? <Check className="h-3 w-3 text-success" /> : 'Save'}
+                </Button>
+              </div>
+              {domainError && <p className="text-[11px] text-destructive">{domainError}</p>}
+              {domainSaved && (
+                <p className="text-[11px] text-text-faint">
+                  Add a CNAME record pointing <span className="font-mono">{customDomain}</span> → <span className="font-mono">{result.previewUrl.replace('https://', '')}</span>
+                </p>
+              )}
             </div>
           </div>
         )}
