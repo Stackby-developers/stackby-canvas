@@ -9,7 +9,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.1.0] — 2026-09-13
+## [1.1.0] — 2026-09-14
+
+> Merged `canvas-frontend` → `main` 2026-09-14. All Phase 5 items complete.
+
 
 ### Added — Phase 5: mobile-responsive viewer + partner integrations (Zapier, Make)
 
