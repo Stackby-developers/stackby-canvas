@@ -1,0 +1,231 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { GitLabAdapter } from '../providers/gitlab.js';
+
+// Mock undici at module level
+vi.mock('undici', () => ({
+  request: vi.fn(),
+}));
+
+import { request } from 'undici';
+const mockedRequest = request as ReturnType<typeof vi.fn>;
+
+function makeResponse(statusCode: number, data: unknown) {
+  return Promise.resolve({
+    statusCode,
+    body: { json: () => Promise.resolve(data) },
+  });
+}
+
+describe('GitLabAdapter', () => {
+  let adapter: GitLabAdapter;
+
+  beforeEach(() => {
+    adapter = new GitLabAdapter();
+    mockedRequest.mockReset();
+  });
+
+  describe('createRepo', () => {
+    it('calls POST /api/v4/projects with correct payload', async () => {
+      // namespace lookup
+      mockedRequest.mockResolvedValueOnce({
+        statusCode: 200,
+        body: { json: () => Promise.resolve([{ id: 42, path: 'myorg' }]) },
+      });
+      // project create
+      mockedRequest.mockResolvedValueOnce({
+        statusCode: 201,
+        body: {
+          json: () => Promise.resolve({
+            web_url: 'https://gitlab.com/myorg/my-app',
+            http_url_to_repo: 'https://gitlab.com/myorg/my-app.git',
+            default_branch: 'main',
+          }),
+        },
+      });
+
+      const result = await adapter.createRepo(
+        { name: 'my-app', orgOrUser: 'myorg', visibility: 'private' },
+        'glpat-token',
+      );
+
+      expect(result.url).toBe('https://gitlab.com/myorg/my-app');
+      expect(result.cloneUrl).toBe('https://gitlab.com/myorg/my-app.git');
+      expect(result.defaultBranch).toBe('main');
+
+      // second call is the project create
+      const [createUrl, createOpts] = mockedRequest.mock.calls[1] as [string, { body: string }];
+      expect(createUrl).toContain('/api/v4/projects');
+      const body = JSON.parse(createOpts.body);
+      expect(body.name).toBe('my-app');
+      expect(body.visibility).toBe('private');
+      expect(body.namespace_id).toBe(42);
+    });
+
+    it('throws on non-201 response', async () => {
+      // No orgOrUser → no namespace lookup, project create is the only call
+      mockedRequest.mockResolvedValueOnce(makeResponse(422, { message: 'has already been taken' }));
+      await expect(
+        adapter.createRepo({ name: 'dup', orgOrUser: '', visibility: 'private' }, 'tok'),
+      ).rejects.toThrow('GitLab createRepo failed (422)');
+    });
+  });
+
+  describe('pushFiles', () => {
+    it('uses POST /repository/commits with base64-encoded actions', async () => {
+      mockedRequest.mockResolvedValueOnce({
+        statusCode: 201,
+        body: {
+          json: () => Promise.resolve({
+            id: 'abc123sha',
+            web_url: 'https://gitlab.com/myorg/my-app/-/commit/abc123sha',
+          }),
+        },
+      });
+
+      const result = await adapter.pushFiles(
+        'myorg/my-app',
+        'studio/update',
+        [{ path: 'src/App.tsx', content: 'export default function App() {}' }],
+        'feat: update',
+        'glpat-token',
+      );
+
+      expect(result.sha).toBe('abc123sha');
+      expect(result.url).toContain('abc123sha');
+
+      const [callUrl, callOpts] = mockedRequest.mock.calls[0] as [string, { body: string }];
+      expect(callUrl).toContain('/repository/commits');
+      const body = JSON.parse(callOpts.body);
+      expect(body.branch).toBe('studio/update');
+      expect(body.commit_message).toBe('feat: update');
+      expect(body.actions[0].action).toBe('create');
+      expect(body.actions[0].encoding).toBe('base64');
+    });
+
+    it('retries with update action when create returns 400', async () => {
+      mockedRequest
+        .mockResolvedValueOnce(makeResponse(400, { message: 'A file with this name already exists' }))
+        .mockResolvedValueOnce({
+          statusCode: 201,
+          body: {
+            json: () => Promise.resolve({ id: 'retry-sha', web_url: 'https://gitlab.com/-/commit/retry-sha' }),
+          },
+        });
+
+      const result = await adapter.pushFiles(
+        'myorg/my-app', 'main',
+        [{ path: 'README.md', content: 'updated' }],
+        'fix: update readme', 'tok',
+      );
+
+      expect(result.sha).toBe('retry-sha');
+      expect(mockedRequest).toHaveBeenCalledTimes(2);
+      const [, retryOpts] = mockedRequest.mock.calls[1] as [string, { body: string }];
+      const retryBody = JSON.parse(retryOpts.body);
+      expect(retryBody.actions[0].action).toBe('update');
+    });
+  });
+
+  describe('createPR', () => {
+    it('creates a merge request and returns iid as number', async () => {
+      mockedRequest.mockResolvedValueOnce({
+        statusCode: 201,
+        body: {
+          json: () => Promise.resolve({
+            id: 999,
+            iid: 7,
+            web_url: 'https://gitlab.com/myorg/my-app/-/merge_requests/7',
+          }),
+        },
+      });
+
+      const result = await adapter.createPR(
+        'myorg/my-app',
+        { title: 'Studio update', body: 'Generated by Studio', sourceBranch: 'studio/feat', targetBranch: 'main' },
+        'tok',
+      );
+
+      expect(result.number).toBe(7);
+      expect(result.url).toContain('/merge_requests/7');
+
+      const [callUrl, callOpts] = mockedRequest.mock.calls[0] as [string, { body: string }];
+      expect(callUrl).toContain('/merge_requests');
+      const body = JSON.parse(callOpts.body);
+      expect(body.source_branch).toBe('studio/feat');
+      expect(body.target_branch).toBe('main');
+    });
+  });
+
+  describe('getRemoteStatus', () => {
+    it('returns exists=true with headSha when branch exists', async () => {
+      mockedRequest.mockResolvedValueOnce({
+        statusCode: 200,
+        body: {
+          json: () => Promise.resolve({ commit: { id: 'deadbeef' } }),
+        },
+      });
+
+      const status = await adapter.getRemoteStatus('myorg/my-app', 'main', 'tok');
+      expect(status.exists).toBe(true);
+      expect(status.headSha).toBe('deadbeef');
+      expect(status.branch).toBe('main');
+    });
+
+    it('returns exists=false on 404', async () => {
+      mockedRequest.mockResolvedValueOnce(makeResponse(404, { message: '404 Branch Not Found' }));
+
+      const status = await adapter.getRemoteStatus('myorg/my-app', 'nonexistent', 'tok');
+      expect(status.exists).toBe(false);
+      expect(status.headSha).toBe('');
+    });
+  });
+
+  describe('getFileContent', () => {
+    it('returns decoded file content', async () => {
+      const content = Buffer.from('export default function App() {}').toString('base64');
+      mockedRequest.mockResolvedValueOnce({
+        statusCode: 200,
+        body: { json: () => Promise.resolve({ content, encoding: 'base64' }) },
+      });
+
+      const result = await adapter.getFileContent('myorg/my-app', 'src/App.tsx', 'main', 'tok');
+      expect(result).toBe('export default function App() {}');
+
+      const [callUrl] = mockedRequest.mock.calls[0] as [string];
+      expect(callUrl).toContain('/repository/files/');
+      expect(callUrl).toContain('ref=main');
+    });
+
+    it('returns null on 404', async () => {
+      mockedRequest.mockResolvedValueOnce(makeResponse(404, { message: '404 File Not Found' }));
+
+      const result = await adapter.getFileContent('myorg/my-app', 'missing.ts', 'main', 'tok');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getDiff', () => {
+    it('maps gitlab diffs to RemoteDiff shape', async () => {
+      mockedRequest.mockResolvedValueOnce({
+        statusCode: 200,
+        body: {
+          json: () => Promise.resolve({
+            commits: [{ id: 'sha1' }, { id: 'sha2' }],
+            diffs: [
+              { new_path: 'src/App.tsx', old_path: 'src/App.tsx', new_file: false, deleted_file: false, diff: '@@ -1 +1 @@' },
+              { new_path: 'src/New.tsx', old_path: '', new_file: true, deleted_file: false },
+              { new_path: 'src/Old.tsx', old_path: 'src/Old.tsx', new_file: false, deleted_file: true },
+            ],
+          }),
+        },
+      });
+
+      const diff = await adapter.getDiff('myorg/my-app', 'base-sha', 'head-sha', 'tok');
+      expect(diff.aheadBy).toBe(2);
+      expect(diff.files).toHaveLength(3);
+      expect(diff.files[0]).toEqual({ path: 'src/App.tsx', status: 'modified', patch: '@@ -1 +1 @@' });
+      expect(diff.files[1]).toEqual({ path: 'src/New.tsx', status: 'added' });
+      expect(diff.files[2]).toEqual({ path: 'src/Old.tsx', status: 'removed' });
+    });
+  });
+});
