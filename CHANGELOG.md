@@ -9,6 +9,59 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.0] — 2026-09-24
+
+### Added — Platform completion: billing, GitLab, SAML, stack allowlist, design crawler
+
+#### Stripe billing integration (`apps/api` + `apps/studio-web`)
+
+- **`apps/api/src/billing/bundles.ts`** — 4 credit bundles: 50 ($5), 200 ($15), 500 ($30), 1000 ($55); Stripe price IDs via env
+- **`POST /v1/billing/checkout`** — creates a Stripe Checkout session for a chosen bundle; returns session URL; 503 if Stripe is unconfigured
+- **`POST /v1/billing/webhook`** — verifies Stripe signature, credits workspace on `checkout.session.completed`; scoped Fastify plugin for raw body parsing
+- **`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*`** added to `apps/api` config
+- **Next.js proxy routes** — `(app)/api/billing/checkout/` (inside auth group), `api/billing/webhook/` (outside auth group, for Stripe delivery)
+- **CreditsPanel** — replaced hardcoded external billing URL with a 2×2 bundle card grid; per-card loading spinner; redirects to Stripe Checkout on selection
+
+#### GitLab adapter (`services/git`)
+
+- **`services/git/src/providers/gitlab.ts`** — full `ProviderAdapter` implementation using GitLab REST API v4 (`undici`). All 7 methods: `createRepo` (namespace lookup), `createBranch`, `pushFiles` (batch commits with `create→update` retry), `createPR` (MR), `getRemoteStatus`, `getDiff` (ahead-by from commit count), `getFileContent`. Supports `GITLAB_BASE_URL` for self-hosted instances.
+- **`services/git/src/__tests__/gitlab.test.ts`** — 10 tests covering all methods; 56/56 tests passing
+
+#### Stack allowlist enforcement (`services/gateway` + `apps/api` + admin UI)
+
+- **`infra/db/migrations/0005_stack_allowlist.sql`** — `allowed_stack_ids TEXT[] NOT NULL DEFAULT '{}'` column on `workspace_policies`
+- **`WorkspacePolicy.allowedStackIds`** — added to type, `getPolicy`, and `savePolicy`; on save, policy is synced to Redis key `ws:policy:{workspaceId}` (1h TTL) so the Gateway can read it without a DB call
+- **`isStackAllowed(policy, stackId)`** — exported helper: empty array = all allowed
+- **Gateway read / mutate / aggregate routes** — check `ws:policy:{workspaceId}` after auth; return 403 `STACK_NOT_ALLOWED` if stack not in non-empty allowlist
+- **`PATCH /v1/admin/policy`** — now accepts `allowedStackIds: string[]`
+- **PolicyTab** — new "Stack Allowlist" textarea (one stack ID per line), count display, saved via policy PATCH
+- **`services/gateway/src/__tests__/allowlist.test.ts`** — 4 tests: blocked stack 403, allowed stack passes, empty allowlist allows all, missing Redis key allows all
+
+#### Playwright design page crawler (`services/design`)
+
+- **`services/design/src/extractor/page-crawler.ts`** — replaces stub with real BFS Playwright crawler: Chromium headless, fresh context per job, injects `DOM_EXTRACTION_SCRIPT` on each page, accumulates color/font/logo/spacing/radius samples across up to `maxPages` pages, respects `AbortSignal` (emits `cancelled`), recovers from per-page navigation errors, closes browser in `finally`
+- **`playwright ^1.44.0`** added to `services/design` devDependencies
+- **`services/design/src/__tests__/crawler.test.ts`** — 8 tests via mocked Playwright; 55/55 design tests passing
+
+#### SAML 2.0 SSO for Enterprise builder login (`apps/api` + `apps/studio-web`)
+
+- **`apps/api/src/auth/saml-config.ts`** — `SamlConfigStore`: Redis-backed IdP config per workspace
+- **`GET /v1/saml/:workspaceId/login`** — generates SAML `AuthnRequest`, redirects to IdP SSO URL
+- **`POST /v1/saml/:workspaceId/callback`** — validates SAML assertion, extracts email/userId via configured attribute mapping, issues a short-lived Studio session token, redirects to `/connect/saml-complete`
+- **`POST /v1/saml/config`** — saves IdP config (entryPoint, issuer, cert, attribute mapping)
+- **`GET /v1/saml/session`** — exchanges one-time session token for a workspace PAT
+- **Next.js proxy routes** — SAML login, callback, session exchange, and admin config
+- **`/connect/saml-complete`** — exchanges token, stores PAT in localStorage, redirects to `/`
+- **`/connect` page** — "Sign in with SSO" section with workspace ID input, separated by enterprise divider
+- **Admin Console SSO tab** — IdP config form (Entity ID, SSO URL, certificate, attribute names) with ACS URL display
+
+#### SDK npm publish
+
+- **`packages/sdk/package.json`** — `publishConfig: { access: "public", registry: "https://registry.npmjs.org" }`
+- **`.github/workflows/publish-sdk.yml`** — publishes `@stackby/studio-sdk` on `sdk-v*` tags using `NPM_TOKEN` secret
+
+---
+
 ## [1.1.0] — 2026-09-14
 
 > Merged `canvas-frontend` → `main` 2026-09-14. All Phase 5 items complete.
