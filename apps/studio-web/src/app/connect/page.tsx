@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff, ExternalLink, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, ExternalLink, ArrowLeft, Building2 } from 'lucide-react';
 import { useAuth } from '@/src/hooks/use-auth';
 
 const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#686868" stroke-width="1.5" stroke-linejoin="round"><path d="M12 3 3 7l9 4 9-4-9-4Z"/><path d="m3 12 9 4 9-4"/></svg>`;
@@ -38,12 +38,13 @@ export default function ConnectPage() {
   const searchParams = useSearchParams();
   const next = searchParams.get('next') ?? '/';
   const { connect, isConnected, loading } = useAuth();
-  const [step, setStep] = useState<'landing' | 'pat'>('landing');
+  const [step, setStep] = useState<'landing' | 'pat' | 'sso'>('landing');
   const [pat, setPat] = useState('');
   const [showPat, setShowPat] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState('');
   const [hoverBtn, setHoverBtn] = useState(false);
+  const [ssoWorkspaceId, setSsoWorkspaceId] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function ConnectPage() {
   }, [loading, isConnected, router, next]);
 
   useEffect(() => {
-    if (step === 'pat') setTimeout(() => inputRef.current?.focus(), 50);
+    if (step === 'pat' || step === 'sso') setTimeout(() => inputRef.current?.focus(), 50);
   }, [step]);
 
   async function handleConnect(e: React.FormEvent) {
@@ -104,6 +105,62 @@ export default function ConnectPage() {
             <button onClick={() => setStep('pat')} style={S.linkBtn}>
               Use a Personal Access Token
             </button>
+
+            <div style={S.dividerRow}>
+              <div style={S.dividerLine} />
+              <span style={S.dividerText}>enterprise</span>
+              <div style={S.dividerLine} />
+            </div>
+
+            <button
+              onClick={() => setStep('sso')}
+              style={{ ...S.btnPrimary, background: '#fff', color: '#202020', border: '1px solid #eaeaea', gap: '6px' }}
+            >
+              <Building2 size={14} strokeWidth={1.6} />
+              Sign in with SSO
+            </button>
+          </>
+        ) : step === 'sso' ? (
+          <>
+            <button
+              onClick={() => { setStep('landing'); setError(''); setSsoWorkspaceId(''); }}
+              style={S.backBtn}
+            >
+              <ArrowLeft size={13} strokeWidth={1.6} /> Back
+            </button>
+
+            <div style={S.logoWrap} dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />
+            <h1 style={S.brand}>SSO Sign In</h1>
+            <p style={{ ...S.sub, marginBottom: '20px' }}>Enter your workspace ID to be redirected to your identity provider.</p>
+
+            <label style={S.label}>Workspace SSO ID</label>
+            <div style={S.inputWrap}>
+              <input
+                ref={inputRef}
+                type="text"
+                value={ssoWorkspaceId}
+                onChange={(e) => { setSsoWorkspaceId(e.target.value); setError(''); }}
+                placeholder="e.g. acme-corp"
+                style={{ ...S.input, fontFamily: 'inherit', paddingRight: '12px' }}
+                autoComplete="off"
+              />
+            </div>
+
+            {error && <p style={S.error}>{error}</p>}
+
+            <a
+              href={ssoWorkspaceId.trim() ? `/api/auth/saml/${encodeURIComponent(ssoWorkspaceId.trim())}/login` : '#'}
+              onClick={(e) => { if (!ssoWorkspaceId.trim()) e.preventDefault(); }}
+              style={{
+                ...S.btnPrimary,
+                marginTop: '10px',
+                textDecoration: 'none',
+                opacity: ssoWorkspaceId.trim() ? 1 : 0.4,
+                pointerEvents: ssoWorkspaceId.trim() ? 'auto' : 'none',
+              } as React.CSSProperties}
+            >
+              Sign in with SSO →
+            </a>
           </>
         ) : (
           <>

@@ -1,6 +1,8 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import formbody from '@fastify/formbody';
 import pg from 'pg';
+import { Redis } from 'ioredis';
 import { loadConfig } from './config.js';
 import { registerBalanceRoute } from './routes/credits/balance.js';
 import { registerHistoryRoute } from './routes/credits/history.js';
@@ -20,12 +22,15 @@ import { registerWebhookDeleteRoute } from './routes/webhooks/delete.js';
 import { registerWebhookDeliveriesRoute } from './routes/webhooks/deliveries.js';
 import { registerCheckoutRoute } from './routes/billing/checkout.js';
 import { registerWebhookRoute } from './routes/billing/webhook.js';
+import { registerSamlRoutes } from './routes/auth/saml.js';
 
 const config = loadConfig();
 const pool = new pg.Pool({ connectionString: config.DATABASE_URL });
+const redis = new Redis(config.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 2 });
 const app = Fastify({ logger: { level: config.NODE_ENV === 'test' ? 'silent' : 'info' } });
 
 await app.register(cors, { origin: true });
+await app.register(formbody);
 
 app.get('/health', () => ({ status: 'ok', service: 'api' }));
 app.get('/ready', async () => {
@@ -51,13 +56,15 @@ registerWebhookDeleteRoute(app, pool);
 registerWebhookDeliveriesRoute(app, pool);
 registerCheckoutRoute(app, config);
 registerWebhookRoute(app, pool, config);
+registerSamlRoutes(app, redis, config);
 
 const start = async () => {
+  await redis.connect();
   await app.listen({ port: config.PORT, host: '0.0.0.0' });
 };
 
-process.on('SIGTERM', async () => { await app.close(); await pool.end(); });
-process.on('SIGINT', async () => { await app.close(); await pool.end(); });
+process.on('SIGTERM', async () => { await app.close(); await pool.end(); await redis.quit(); });
+process.on('SIGINT', async () => { await app.close(); await pool.end(); await redis.quit(); });
 
 if (config.NODE_ENV !== 'test') void start();
 
