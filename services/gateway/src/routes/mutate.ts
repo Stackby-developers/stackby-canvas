@@ -77,6 +77,22 @@ export function registerMutateRoute(app: FastifyInstance, deps: MutateDeps): voi
       return reply.status(400).send({ code: 'INVALID_BODY', message: String(err) });
     }
 
+    // Stack allowlist check
+    const workspaceId = caller.claims.workspaceId;
+    if (workspaceId) {
+      const policyRaw = await deps.redis.get(`ws:policy:${workspaceId}`);
+      if (policyRaw) {
+        const policy = JSON.parse(policyRaw) as { allowedStackIds?: string[] };
+        const allowed = policy.allowedStackIds ?? [];
+        if (allowed.length > 0 && !allowed.includes(body.stackId)) {
+          return reply.status(403).send({
+            code: 'STACK_NOT_ALLOWED',
+            message: `Stack ${body.stackId} is not in the workspace allowlist.`,
+          });
+        }
+      }
+    }
+
     // Resolve permissions
     try {
       await resolvePermissions(caller, body.stackId);

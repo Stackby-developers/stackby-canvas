@@ -18,6 +18,8 @@ import { registerWebhookCreateRoute } from './routes/webhooks/create.js';
 import { registerWebhookListRoute } from './routes/webhooks/list.js';
 import { registerWebhookDeleteRoute } from './routes/webhooks/delete.js';
 import { registerWebhookDeliveriesRoute } from './routes/webhooks/deliveries.js';
+import { registerCheckoutRoute } from './routes/billing/checkout.js';
+import { registerWebhookRoute } from './routes/billing/webhook.js';
 
 const config = loadConfig();
 const pool = new pg.Pool({ connectionString: config.DATABASE_URL });
@@ -47,6 +49,8 @@ registerWebhookCreateRoute(app, pool);
 registerWebhookListRoute(app, pool);
 registerWebhookDeleteRoute(app, pool);
 registerWebhookDeliveriesRoute(app, pool);
+registerCheckoutRoute(app, config);
+registerWebhookRoute(app, pool, config);
 
 const start = async () => {
   await app.listen({ port: config.PORT, host: '0.0.0.0' });

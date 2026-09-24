@@ -1,4 +1,5 @@
 import type { Pool } from 'pg';
+import type { Redis } from 'ioredis';
 import type { CreditLedger } from './ledger.js';
 
 export interface WorkspacePolicy {
@@ -8,6 +9,7 @@ export interface WorkspacePolicy {
   allowGitExport: boolean;
   allowedModelTiers: string[];
   requireApprovalForPublish: boolean;
+  allowedStackIds: string[];
 }
 
 export interface CreditCheckResult {
@@ -16,6 +18,10 @@ export interface CreditCheckResult {
   monthUsed: number;
   cap: number;
   remaining: number;
+}
+
+export function isStackAllowed(policy: WorkspacePolicy, stackId: string): boolean {
+  return policy.allowedStackIds.length === 0 || policy.allowedStackIds.includes(stackId);
 }
 
 export class CreditCapError extends Error {
@@ -49,6 +55,7 @@ export class PolicyEnforcer {
     private readonly pool: Pool,
     private readonly ledger: CreditLedger,
     private readonly defaultCap: number,
+    private readonly redis: Redis | null = null,
   ) {}
 
   async getPolicy(workspaceId: string): Promise<WorkspacePolicy> {
@@ -64,20 +71,39 @@ export class PolicyEnforcer {
       allowGitExport: row?.['allow_git_export'] as boolean ?? true,
       allowedModelTiers: row?.['allowed_model_tiers'] as string[] ?? ['T0', 'T1', 'T2', 'T3'],
       requireApprovalForPublish: row?.['require_approval_for_publish'] as boolean ?? false,
+      allowedStackIds: row?.['allowed_stack_ids'] as string[] ?? [],
     };
   }
 
   async savePolicy(policy: WorkspacePolicy): Promise<void> {
     await this.pool.query(
       `INSERT INTO workspace_policies
-       (workspace_id, monthly_credit_cap, allow_public_publishing, allow_git_export, allowed_model_tiers, require_approval_for_publish)
-       VALUES ($1,$2,$3,$4,$5,$6)
+       (workspace_id, monthly_credit_cap, allow_public_publishing, allow_git_export,
+        allowed_model_tiers, require_approval_for_publish, allowed_stack_ids)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
        ON CONFLICT (workspace_id) DO UPDATE SET
          monthly_credit_cap=$2, allow_public_publishing=$3, allow_git_export=$4,
-         allowed_model_tiers=$5, require_approval_for_publish=$6`,
-      [policy.workspaceId, policy.monthlyCreditCap, policy.allowPublicPublishing,
-       policy.allowGitExport, JSON.stringify(policy.allowedModelTiers), policy.requireApprovalForPublish],
+         allowed_model_tiers=$5, require_approval_for_publish=$6, allowed_stack_ids=$7`,
+      [
+        policy.workspaceId,
+        policy.monthlyCreditCap,
+        policy.allowPublicPublishing,
+        policy.allowGitExport,
+        JSON.stringify(policy.allowedModelTiers),
+        policy.requireApprovalForPublish,
+        JSON.stringify(policy.allowedStackIds),
+      ],
     );
+
+    // Sync to Redis so the Gateway can enforce allowlist without a DB call
+    if (this.redis) {
+      await this.redis.set(
+        `ws:policy:${policy.workspaceId}`,
+        JSON.stringify(policy),
+        'EX',
+        3600, // 1h TTL; re-synced on every save
+      );
+    }
   }
 
   async checkCanRun(

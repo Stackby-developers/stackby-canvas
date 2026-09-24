@@ -1,8 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { X, Settings, User, Zap, ExternalLink } from 'lucide-react';
+import { X, Settings, User, Zap } from 'lucide-react';
 import { useAuth } from '@/src/hooks/use-auth';
 import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
+
+const BUNDLES = [
+  { id: 'credits_50',   credits: 50,   label: '50 credits',   price: '$5'  },
+  { id: 'credits_200',  credits: 200,  label: '200 credits',  price: '$15' },
+  { id: 'credits_500',  credits: 500,  label: '500 credits',  price: '$30' },
+  { id: 'credits_1000', credits: 1000, label: '1,000 credits', price: '$55' },
+];
 
 interface SettingsModalProps {
   open: boolean;
@@ -28,6 +35,7 @@ function CreditsPanel() {
   const [balance, setBalance] = useState<CreditBalance | null>(null);
   const [history, setHistory] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
 
   useEffect(() => {
     void Promise.all([
@@ -41,6 +49,30 @@ function CreditsPanel() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  async function handlePurchase(bundleId: string) {
+    setPurchasing(bundleId);
+    try {
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspaceId: DEV_WORKSPACE_ID,
+          bundleId,
+          successUrl: window.location.href,
+          cancelUrl: window.location.href,
+        }),
+      });
+      const data = await res.json() as { url?: string };
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      // noop — keep button enabled so user can retry
+    } finally {
+      setPurchasing(null);
+    }
+  }
 
   const used = balance ? balance.totalCredited - balance.balance : 0;
   const pct = balance && balance.totalCredited > 0 ? Math.round((used / balance.totalCredited) * 100) : 0;
@@ -80,22 +112,35 @@ function CreditsPanel() {
             </div>
           </div>
 
-          {/* Add credits CTA */}
-          <a
-            href="https://stackby.com/studio/billing"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between w-full rounded-[10px] border border-border bg-surface px-4 py-3 hover:bg-hover transition-colors duration-150"
-          >
-            <div className="flex items-center gap-2.5">
-              <Zap strokeWidth={1.5} className="h-4 w-4 text-accent shrink-0" />
-              <div>
-                <p className="text-[14px] font-medium text-text">Add credits</p>
-                <p className="text-[12px] text-text-muted">Purchase a credit pack or upgrade your plan</p>
-              </div>
+          {/* Buy credits */}
+          <div className="space-y-2">
+            <p className="text-[13px] font-medium text-text-muted flex items-center gap-1.5">
+              <Zap strokeWidth={1.5} className="h-3.5 w-3.5 text-accent" />
+              Add credits
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {BUNDLES.map((b) => (
+                <button
+                  key={b.id}
+                  disabled={purchasing !== null}
+                  onClick={() => void handlePurchase(b.id)}
+                  className="flex flex-col items-start rounded-[8px] border border-border bg-surface px-3 py-2.5 hover:bg-hover transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {purchasing === b.id ? (
+                    <span className="flex items-center gap-1.5 text-[13px] text-text-muted">
+                      <span style={{ width: '12px', height: '12px', borderRadius: '50%', border: '2px solid #3A3A3A', borderTopColor: '#fff', display: 'inline-block', animation: 'spin .7s linear infinite' }} />
+                      Loading…
+                    </span>
+                  ) : (
+                    <>
+                      <span className="text-[14px] font-semibold text-text tabular-nums">{b.label}</span>
+                      <span className="text-[12px] text-text-muted">{b.price}</span>
+                    </>
+                  )}
+                </button>
+              ))}
             </div>
-            <ExternalLink strokeWidth={1.5} className="h-3.5 w-3.5 text-text-faint shrink-0" />
-          </a>
+          </div>
 
           {/* Recent transactions */}
           {history.length > 0 && (

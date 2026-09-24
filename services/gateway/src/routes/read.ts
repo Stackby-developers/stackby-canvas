@@ -63,6 +63,22 @@ export function registerReadRoute(app: FastifyInstance, deps: ReadRouteDeps): vo
       return reply.status(400).send({ code: 'INVALID_BODY', message: String(err) });
     }
 
+    // Step 2b: Stack allowlist check (reads ws:policy:{workspaceId} synced by API on every policy save)
+    const workspaceId = caller.claims.workspaceId;
+    if (workspaceId) {
+      const policyRaw = await deps.bucket.redis.get(`ws:policy:${workspaceId}`);
+      if (policyRaw) {
+        const policy = JSON.parse(policyRaw) as { allowedStackIds?: string[] };
+        const allowed = policy.allowedStackIds ?? [];
+        if (allowed.length > 0 && !allowed.includes(query.stackId)) {
+          return reply.status(403).send({
+            code: 'STACK_NOT_ALLOWED',
+            message: `Stack ${query.stackId} is not in the workspace allowlist.`,
+          });
+        }
+      }
+    }
+
     // Step 3: Resolve permissions
     let scope, scopeHash: string;
     try {

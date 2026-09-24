@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
-import { Button, Input, Separator, Spinner } from '@stackby/ui';
+import { Button, Input, Separator, Spinner, Textarea } from '@stackby/ui';
 import { DEV_WORKSPACE_ID } from '@/src/lib/dev-constants';
 
 interface Policy {
@@ -12,6 +12,7 @@ interface Policy {
   allowedModelTiers: string[];
   monthlyCreditCap: number;
   requireApprovalForPublish: boolean;
+  allowedStackIds: string[];
 }
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -39,6 +40,7 @@ const MODEL_TIERS = ['T0', 'T1', 'T2', 'T3'];
 export function PolicyTab() {
   const [policy, setPolicy] = useState<Policy | null>(null);
   const [draft, setDraft] = useState<Policy | null>(null);
+  const [stackIdsText, setStackIdsText] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -47,8 +49,10 @@ export function PolicyTab() {
     fetch(`/api/admin/policy?workspaceId=${DEV_WORKSPACE_ID}`)
       .then((r) => r.json() as Promise<Policy>)
       .then((p) => {
-        setPolicy(p);
-        setDraft(p);
+        const policyWithDefaults = { ...p, allowedStackIds: p.allowedStackIds ?? [] };
+        setPolicy(policyWithDefaults);
+        setDraft(policyWithDefaults);
+        setStackIdsText(policyWithDefaults.allowedStackIds.join('\n'));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -68,14 +72,21 @@ export function PolicyTab() {
 
   async function handleSave() {
     if (!draft) return;
+    const allowedStackIds = stackIdsText
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const payload = { ...draft, allowedStackIds, workspaceId: DEV_WORKSPACE_ID };
     setSaving(true);
     try {
       await fetch('/api/admin/policy', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...draft, workspaceId: DEV_WORKSPACE_ID }),
+        body: JSON.stringify(payload),
       });
-      setPolicy(draft);
+      const updated = { ...draft, allowedStackIds };
+      setPolicy(updated);
+      setDraft(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } finally {
@@ -95,7 +106,8 @@ export function PolicyTab() {
     return <p className="text-sm text-text-faint">Unable to load policy.</p>;
   }
 
-  const dirty = JSON.stringify(policy) !== JSON.stringify(draft);
+  const savedStackIdsText = (policy?.allowedStackIds ?? []).join('\n');
+  const dirty = JSON.stringify(policy) !== JSON.stringify(draft) || stackIdsText !== savedStackIdsText;
 
   return (
     <div className="max-w-2xl space-y-0">
@@ -176,6 +188,32 @@ export function PolicyTab() {
             );
           })}
         </div>
+      </div>
+
+      <Separator />
+
+      <div className="py-4">
+        <p className="text-sm font-medium text-text">Stack allowlist</p>
+        <p className="mb-3 text-xs text-text-muted">
+          Leave empty to allow all stacks. Add stack IDs (one per line) to restrict which stacks
+          can be used in Studio.
+        </p>
+        <Textarea
+          value={stackIdsText}
+          onChange={(e) => setStackIdsText(e.target.value)}
+          placeholder={'stk_abc123\nstk_def456'}
+          rows={4}
+          className="font-mono text-xs"
+        />
+        {stackIdsText.trim() && (
+          <p className="mt-1.5 text-xs text-text-faint">
+            {stackIdsText.split('\n').filter((s) => s.trim()).length} stack
+            {stackIdsText.split('\n').filter((s) => s.trim()).length === 1 ? '' : 's'} allowed
+          </p>
+        )}
+        {!stackIdsText.trim() && (
+          <p className="mt-1.5 text-xs text-success">All stacks permitted (no restriction)</p>
+        )}
       </div>
 
       <Separator />

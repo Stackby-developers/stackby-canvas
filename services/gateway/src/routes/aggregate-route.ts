@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { FastifyInstance } from 'fastify';
+import type { Redis } from 'ioredis';
 import type { JwtVerifier } from '../auth/jwt.js';
 import type { BindingRegistry } from '../bindings/registry.js';
 import type { RowCache } from '../cache/store.js';
@@ -38,6 +39,7 @@ export interface AggregateDeps {
   cooldown: CooldownManager;
   client: StackbyClient;
   config: Config;
+  redis: Redis;
 }
 
 export function registerAggregateRoute(app: FastifyInstance, deps: AggregateDeps): void {
@@ -58,6 +60,22 @@ export function registerAggregateRoute(app: FastifyInstance, deps: AggregateDeps
       body = AggBodySchema.parse(request.body);
     } catch (err) {
       return reply.status(400).send({ code: 'INVALID_BODY', message: String(err) });
+    }
+
+    // Stack allowlist check
+    const workspaceId = caller.claims.workspaceId;
+    if (workspaceId) {
+      const policyRaw = await deps.redis.get(`ws:policy:${workspaceId}`);
+      if (policyRaw) {
+        const policy = JSON.parse(policyRaw) as { allowedStackIds?: string[] };
+        const allowed = policy.allowedStackIds ?? [];
+        if (allowed.length > 0 && !allowed.includes(body.stackId)) {
+          return reply.status(403).send({
+            code: 'STACK_NOT_ALLOWED',
+            message: `Stack ${body.stackId} is not in the workspace allowlist.`,
+          });
+        }
+      }
     }
 
     let scope, scopeHash: string;

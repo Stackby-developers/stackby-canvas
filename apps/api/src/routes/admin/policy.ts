@@ -12,6 +12,7 @@ const B = z.object({
   allowedModelTiers: z.array(z.string()).optional(),
   monthlyCreditCap: z.number().int().positive().optional(),
   requireApprovalForPublish: z.boolean().optional(),
+  allowedStackIds: z.array(z.string()).optional(),
 });
 
 export function registerPolicyRoute(app: FastifyInstance, pool: Pool, config: Config): void {
@@ -31,6 +32,7 @@ export function registerPolicyRoute(app: FastifyInstance, pool: Pool, config: Co
       ...(body.allowedModelTiers !== undefined ? { allowedModelTiers: body.allowedModelTiers } : {}),
       ...(body.monthlyCreditCap !== undefined ? { monthlyCreditCap: body.monthlyCreditCap } : {}),
       ...(body.requireApprovalForPublish !== undefined ? { requireApprovalForPublish: body.requireApprovalForPublish } : {}),
+      ...(body.allowedStackIds !== undefined ? { allowedStackIds: body.allowedStackIds } : {}),
     };
     await enforcer.savePolicy(updated);
     return reply.send(updated);
